@@ -30,8 +30,8 @@
     <q-card>
       <q-card-section class="row items-center">
         <span class="q-ml-sm"
-          >Do you want to delete this product? {{ currentProductId }}</span
-        >
+          >Do you want to delete product with ID: {{ currentProductId }}?
+        </span>
       </q-card-section>
 
       <q-card-actions align="right">
@@ -40,7 +40,7 @@
           flat
           label="Delete"
           color="danger"
-          @click="handleDeleteProduct(currentProductId)"
+          @click="handleDeleteProduct()"
           v-close-popup
         />
       </q-card-actions>
@@ -63,19 +63,6 @@ async function fetchData() {
   );
   products.value = await responseProducts.json();
   rows.value = await products.value.products;
-
-  // my way
-  // fetch("https://dummyjson.com/products")
-  //   .then((result) => result.json())
-  //   .then((result) => result.total)
-  //   .then((result) => {
-  //     fetch(`https://dummyjson.com/products?limit=${result}`)
-  //       .then((result) => result.json())
-  //       .then((result) => {
-  //         products.value = result;
-  //         rows.value = products.value.products;
-  //       });
-  //   });
 }
 
 fetchData();
@@ -147,11 +134,13 @@ const columns = [
   },
 ];
 
-async function handleDeleteProduct(id) {
-  const response = await fetch(`https://dummyjson.com/products/${id}`, {
-    method: "DELETE",
-  });
-
+async function handleDeleteProduct() {
+  const response = await fetch(
+    `https://dummyjson.com/products/${currentProductId.value}`,
+    {
+      method: "DELETE",
+    }
+  );
   const deletedProduct = await response.json();
   const index = products.value.products.findIndex(
     (product) => product.id == deletedProduct.id
@@ -159,6 +148,12 @@ async function handleDeleteProduct(id) {
   products.value.products.splice(index, 1);
 
   confirmDelete.value = false;
+  currentProductId.value = -1;
+}
+
+function openConfirmDeleteDialog(id) {
+  confirmDelete.value = true;
+  currentProductId.value = id;
 }
 
 export default {
@@ -167,6 +162,9 @@ export default {
       columns,
       rows,
       handleDeleteProduct,
+      openConfirmDeleteDialog,
+      confirmDelete,
+      currentProductId,
     };
   },
 
@@ -180,11 +178,6 @@ export default {
         }
       }
       return row[field];
-    },
-    openConfirmDeleteDialog(id) {
-      confirmDelete.value = true;
-      currentProductId.value = id;
-      console.log(currentProductId);
     },
   },
 };
