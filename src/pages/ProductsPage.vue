@@ -157,6 +157,9 @@ function openConfirmDeleteDialog(id) {
 }
 
 export default {
+  data() {
+    return products;
+  },
   setup() {
     return {
       columns,

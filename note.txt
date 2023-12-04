@@ -1,0 +1,32 @@
+cms product (CRUD)
+1 trang view
+1 trang detail
+
+api: https://dummyjson.com/products
+
+UI framework: quasar
+table: https://quasar.dev/vue-components/table#qtable-api
+
+thêm check box
+thay đổi giá sản phẩm theo % hoặc giá tiền
+pagination real
+button icon
+filter
+search by name
+sort price by current page 
+
+==================================================================
+:abc -> v-bind:abc
+1. define prop for a component
+Ex: <HelloWorld msg="You did it!" />
+-> in helloword.vue
+<script setup>
+defineProps({
+  msg: {
+    type: String,
+    required: true
+  }
+})
+</script>
+
+2. Router
