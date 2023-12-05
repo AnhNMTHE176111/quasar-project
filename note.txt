@@ -7,13 +7,14 @@ api: https://dummyjson.com/products
 UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
-thêm check box
+================ TASK =========================
 thay đổi giá sản phẩm theo % hoặc giá tiền
-pagination real
-button icon
 filter
-search by name
-sort price by current page 
+pagination real
+sort price by current page
+button icon <ok>
+search by name <ok>
+thêm check box <ok>
 
 ==================================================================
 :abc -> v-bind:abc

@@ -97,22 +97,13 @@ import { onMounted, ref } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 
-const product = ref([]);
-const titlePage = ref("");
-const pro_id = ref(-1);
-
 export default {
-  data() {
-    return {
-      product,
-      pro_id,
-      titlePage,
-    };
-  },
-
   setup() {
+    const product = ref([]);
+    const titlePage = ref("");
+    const pro_id = ref(-1);
     const route = useRoute();
-    const $q = useQuasar();
+    const quasarNotify = useQuasar();
 
     pro_id.value = route.params.id;
     const getProduct = async () => {
@@ -126,36 +117,41 @@ export default {
     onMounted(() => getProduct());
 
     return {
+      product,
+      pro_id,
+      titlePage,
       slide: ref(0),
-      async hanldeUpdateProduct() {
-        const { id, ...updateObject } = product.value;
-        await fetch(`https://dummyjson.com/products/${pro_id.value}`, {
-          method: "PUT" /* or PATCH */,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...updateObject,
-          }),
-        })
-          .then((res) => res.json())
-          .then((res) => {
-            $q.notify({
-              message: "Update successfully",
-              position: "top-right",
-              type: "positive",
-            });
-          })
-          .catch((e) => {
-            console.log(e);
-            $q.notify({
-              message: "Update failed",
-              position: "top-right",
-              type: "negative",
-            });
-          });
-      },
+      quasarNotify,
     };
   },
 
-  methods: {},
+  methods: {
+    async hanldeUpdateProduct() {
+      const { id, ...updateObject } = this.product;
+      await fetch(`https://dummyjson.com/products/${this.pro_id}`, {
+        method: "PUT" /* or PATCH */,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...updateObject,
+        }),
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          this.quasarNotify.notify({
+            message: "Update successfully",
+            position: "top-right",
+            type: "positive",
+          });
+        })
+        .catch((e) => {
+          console.log(e);
+          this.quasarNotify.notify({
+            message: "Update failed",
+            position: "top-right",
+            type: "negative",
+          });
+        });
+    },
+  },
 };
 </script>
