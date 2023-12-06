@@ -28,7 +28,17 @@
           label="Bulk Pricing"
           @click="ShowSth"
         />
-        <q-btn class="q-ma-md" icon="add" @click="createProductDialog = true" />
+        <q-btn
+          class="q-ma-md"
+          icon="add"
+          @click="
+            () => {
+              console.log('first', createProductDialog);
+              createProductDialog = true;
+              console.log('second', createProductDialog);
+            }
+          "
+        />
       </template>
 
       <template v-slot:body-cell-action="{ row }">
@@ -70,10 +80,19 @@
     </q-card>
   </q-dialog>
 
-  <q-dialog v-model="createProductDialog">
+  <ProductDialog
+    v-model="createProductDialog"
+    :showPopup="createProductDialog"
+    @createProduct="hanldeCreateProduct"
+    :product="product"
+    typeOfDialog="create"
+
+  />
+
+  <!-- <q-dialog v-model="createProductDialog">
     <q-card style="width: 700px; max-width: 80vw">
       <q-card-section>
-        <div class="text-h6">Create New Product</div>
+        <div class="text-h6">Create New Product 111</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
@@ -173,14 +192,18 @@
         </q-form>
       </q-card-section>
     </q-card>
-  </q-dialog>
+  </q-dialog> -->
 </template>
 
 <script>
 import { useQuasar } from "quasar";
 import { onMounted, ref } from "vue";
+import ProductDialog from "../components/ProductDialog.vue";
 
 export default {
+  components: {
+    ProductDialog,
+  },
   setup() {
     const selectedProduct = ref([]);
     const products = ref([]);
@@ -190,7 +213,7 @@ export default {
     const createProductDialog = ref(false);
     const rowsPerPage = ref(10);
     const quasarNotify = useQuasar();
-    const product = ref([]);
+    // const product = ref([]);
     const searchValue = ref("");
     const columns = [
       {
@@ -278,7 +301,7 @@ export default {
       createProductDialog,
       rowsPerPage,
       currentProductId,
-      product,
+      // product,
       searchValue,
     };
   },
@@ -314,19 +337,19 @@ export default {
       this.confirmDelete = false;
       this.currentProductId = -1;
     },
-    async hanldeCreateProduct() {
+    async hanldeCreateProduct(product) {
       await fetch("https://dummyjson.com/products/add", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...this.product,
+          ...product,
         }),
       })
         .then((res) => res.json())
         .then((res) => {
           this.products.products.push(res);
           this.createProductDialog = false;
-          this.product = [];
+          product = [];
           this.quasarNotify.notify({
             message: "Create new product successfully",
             position: "top-right",

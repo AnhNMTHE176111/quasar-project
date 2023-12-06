@@ -39,4 +39,7 @@ defineProps({
 })
 </script>
 
-2. Router
+
+
+popup1 => update product + create product
+popup2 => view product (card)
