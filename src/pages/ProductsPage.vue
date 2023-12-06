@@ -260,9 +260,6 @@ export default {
           });
         });
     },
-    ShowSth() {
-      console.log(this.selectedProduct[0]);
-    },
 
     handleSearchProduct() {
       console.log(this.searchValue);
