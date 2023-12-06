@@ -9,9 +9,18 @@ table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK =========================
 thay đổi giá sản phẩm theo % hoặc giá tiền
+action => 3 item: view <eye>, edit, delete (cả 3 đều popup)
+view => chuyển thành card
+search
 filter
+filter category (or sth based on api)
+
 pagination real
 sort price by current page
+đẩy sp căng full màn hình
+có phần chọn rowsperpage (5, 10, 15,...)
+
+input search sang trái<ok>
 button icon <ok>
 search by name <ok>
 thêm check box <ok>

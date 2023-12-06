@@ -4,29 +4,40 @@
       title="Products"
       :rows="rows"
       :columns="columns"
-      :filter="filter"
       :rows-per-page-options="[rowsPerPage]"
       row-key="id"
       selection="multiple"
       v-model:selected="selectedProduct"
     >
-    <template v-slot:top-left>
-      <q-btn color="primary" icon="check" label="OK" @click="ShowSth" />
-    </template>
-      <template v-slot:top-right>
-        <q-btn
-          class="q-ma-md"
-          icon="create"
-          @click="createProductDialog = true"
-        />
-        <q-input v-model="filter" label="Search">
+      <template v-slot:top-left>
+        <q-input
+          v-model="searchValue"
+          @input="handleSearchProduct"
+          label="Search"
+        >
           <template v-slot:append>
             <q-icon name="search" />
           </template>
         </q-input>
       </template>
+      <template v-slot:top-right>
+        <q-btn
+          v-show="selectedProduct.length > 0"
+          color="primary"
+          icon="payment"
+          label="Bulk Pricing"
+          @click="ShowSth"
+        />
+        <q-btn class="q-ma-md" icon="add" @click="createProductDialog = true" />
+      </template>
 
       <template v-slot:body-cell-action="{ row }">
+        <q-btn
+          flat
+          icon="visibility"
+          color="primary"
+          :to="`/products/${row.id}`"
+        />
         <q-btn flat icon="edit" color="primary" :to="`/products/${row.id}`" />
         <q-btn
           flat
@@ -180,6 +191,7 @@ export default {
     const rowsPerPage = ref(10);
     const quasarNotify = useQuasar();
     const product = ref([]);
+    const searchValue = ref("");
     const columns = [
       {
         name: "title",
@@ -267,7 +279,7 @@ export default {
       rowsPerPage,
       currentProductId,
       product,
-      filter: ref(""),
+      searchValue,
     };
   },
 
@@ -332,7 +344,11 @@ export default {
     },
     ShowSth() {
       console.log(this.selectedProduct[0]);
-    }
+    },
+
+    handleSearchProduct() {
+      console.log(this.searchValue);
+    },
   },
 };
 </script>
