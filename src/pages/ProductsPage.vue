@@ -28,27 +28,17 @@
           label="Bulk Pricing"
           @click="ShowSth"
         />
-        <q-btn
-          class="q-ma-md"
-          icon="add"
-          @click="
-            () => {
-              console.log('first', createProductDialog);
-              createProductDialog = true;
-              console.log('second', createProductDialog);
-            }
-          "
-        />
+        <q-btn class="q-ma-md" icon="add" @click="showCreateDialog" />
       </template>
 
       <template v-slot:body-cell-action="{ row }">
+        <q-btn flat icon="visibility" color="primary" />
         <q-btn
           flat
-          icon="visibility"
+          icon="edit"
           color="primary"
-          :to="`/products/${row.id}`"
+          @click="showUpdateDialog(row.id)"
         />
-        <q-btn flat icon="edit" color="primary" :to="`/products/${row.id}`" />
         <q-btn
           flat
           icon="delete"
@@ -84,9 +74,7 @@
     v-model="createProductDialog"
     :showPopup="createProductDialog"
     @createProduct="hanldeCreateProduct"
-    :product="product"
-    typeOfDialog="create"
-
+    :typeOfDialog="typeOfDialog"
   />
 </template>
 
@@ -108,7 +96,7 @@ export default {
     const createProductDialog = ref(false);
     const rowsPerPage = ref(10);
     const quasarNotify = useQuasar();
-    // const product = ref([]);
+    const typeOfDialog = ref("create");
     const searchValue = ref("");
     const columns = [
       {
@@ -198,6 +186,7 @@ export default {
       currentProductId,
       // product,
       searchValue,
+      typeOfDialog,
     };
   },
 
@@ -259,6 +248,42 @@ export default {
             type: "negative",
           });
         });
+    },
+    async hanldeUpdateProduct(product) {
+      const { id, ...updateObject } = product;
+      await fetch(`https://dummyjson.com/products/${id}`, {
+        method: "PUT" /* or PATCH */,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...updateObject,
+        }),
+      })
+        .then((res) => res.json())
+        .then((res) => {
+          this.quasarNotify.notify({
+            message: "Update successfully",
+            position: "top-right",
+            type: "positive",
+          });
+        })
+        .catch((e) => {
+          console.log(e);
+          this.quasarNotify.notify({
+            message: "Update failed",
+            position: "top-right",
+            type: "negative",
+          });
+        });
+    },
+    showCreateDialog() {
+      this.typeOfDialog = 'create';
+      this.createProductDialog = true;
+    },
+    showUpdateDialog(proID) {
+      const product = this.products.products.filter((p) => p.id == proID);
+      this.typeOfDialog = 'update';
+      console.log(product);
+      this.createProductDialog = true;
     },
 
     handleSearchProduct() {

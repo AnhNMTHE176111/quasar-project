@@ -5,13 +5,13 @@
         <div class="text-h6" v-if="typeOfDialog == 'update'">
           Update Product
         </div>
-        <div class="text-h6" v-else>Create Product {{ showPopup }}</div>
+        <div class="text-h6" v-else>Create Product {{ typeOfDialog }} </div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
         <q-form
           class="col-5 q-gutter-md"
-          @submit.prevent="$emit('createProduct', product)"
+          @submit.prevent="submitHandler"
         >
           <div class="col">
             <q-input
@@ -131,12 +131,22 @@ export default {
     showPopup: Boolean,
   },
   emits: ["updateProduct", "createProduct"],
+  computed: {
+    submitHandler() {
+      return this.typeOfDialog == 'update'
+      ? `$emit('updateProduct', product)`
+      : `$emit('createProduct', product)`
+    }
+  },
   setup() {
     const product = ref([]);
     return {
       product,
     };
   },
-  methods: {},
+  methods: {
+
+
+  },
 };
 </script>
