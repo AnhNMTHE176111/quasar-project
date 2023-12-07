@@ -154,11 +154,6 @@ export default {
     currentUpdateProduct(newValue, oldValue) {
       this.product = newValue;
     },
-    // typeOfDialog(newVal, oldVal) {
-    //   if(newVal == 'update') {
-    //     this.product = [];
-    //   }
-    // }
   },
   methods: {},
 };

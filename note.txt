@@ -8,18 +8,20 @@ UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK =========================
-thay đổi giá sản phẩm theo % hoặc giá tiền
-action => 3 item: view <eye>, edit, delete (cả 3 đều popup)
-view => chuyển thành card
 search
 filter
 filter category (or sth based on api)
+sort price by current page
+
+khi đang view, có nutus edit ở dưới, click vào nút đấy thì từ dialog view mở rộng ra DIALOG EDIT
 
 pagination real
-sort price by current page
-đẩy sp căng full màn hình
 có phần chọn rowsperpage (5, 10, 15,...)
 
+thay đổi giá sản phẩm theo % hoặc giá tiền <ok>
+view => chuyển thành card <OK>
+action => 3 item: view <eye>, edit, delete (cả 3 đều popup) <ok>
+đẩy sp căng full màn hình <ok>
 input search sang trái<ok>
 button icon <ok>
 search by name <ok>

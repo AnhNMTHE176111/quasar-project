@@ -32,7 +32,12 @@
       </template>
 
       <template v-slot:body-cell-action="{ row }">
-        <q-btn flat icon="visibility" color="primary" />
+        <q-btn
+          flat
+          icon="visibility"
+          color="primary"
+          @click="showViewingProductDialog(row.id)"
+        />
         <q-btn
           flat
           icon="edit"
@@ -78,28 +83,45 @@
     @createProduct="hanldeCreateProduct"
     @updateProduct="hanldeUpdateProduct"
   />
+  <ProductViewCard
+    v-model="showViewProduct"
+    :showViewProduct="showViewProduct"
+    :product="productViewing"
+  />
+  <BulkPricingDialog
+    v-model="showPricingDialog"
+    :showPricingDialog="showPricingDialog"
+    @hanldBulkPricing="hanldBulkPricing"
+  />
 </template>
 
 <script>
 import { useQuasar } from "quasar";
 import { onMounted, ref } from "vue";
 import ProductDialog from "../components/ProductDialog.vue";
+import ProductViewCard from "src/components/ProductViewCard.vue";
+import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
 
 export default {
   components: {
     ProductDialog,
+    ProductViewCard,
+    BulkPricingDialog,
   },
   setup() {
     const selectedProduct = ref([]);
     const products = ref([]);
     const rows = ref([]);
     const confirmDelete = ref(false);
-    const currentProductId = ref(-1);
     const createProductDialog = ref(false);
+    const currentProductId = ref(-1);
     const rowsPerPage = ref(13);
     const quasarNotify = useQuasar();
     const typeOfDialog = ref("create");
     const searchValue = ref("");
+    const productViewing = ref([]);
+    const showViewProduct = ref(false);
+    const showPricingDialog = ref(false);
     const currentUpdateProduct = ref([]);
     const columns = [
       {
@@ -191,6 +213,9 @@ export default {
       searchValue,
       typeOfDialog,
       currentUpdateProduct,
+      productViewing,
+      showViewProduct,
+      showPricingDialog,
     };
   },
 
@@ -297,12 +322,64 @@ export default {
       this.createProductDialog = true;
       console.log("parent", product);
     },
-
+    showViewingProductDialog(proID) {
+      const product = this.products.products.filter((p) => p.id == proID)[0];
+      this.productViewing = { ...product };
+      this.showViewProduct = true;
+    },
     handleSearchProduct() {
       console.log(this.searchValue);
     },
     ShowSth() {
-      console.log(this.selectedProduct[0]);
+      this.showPricingDialog = true;
+    },
+    async hanldBulkPricing(updatePrice, updateDiscount) {
+      let result = [];
+
+      await Promise.all(
+        this.selectedProduct.map(async (product) => {
+          const { id, ...updateObject } = product;
+          updateObject.price = parseInt(updatePrice);
+          updateObject.discountPercentage = parseInt(updateDiscount);
+          const response = await fetch(`https://dummyjson.com/products/${id}`, {
+            method: "PUT" /* or PATCH */,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ...updateObject,
+            }),
+          });
+          let currentResult = {
+            id: id,
+            success: false,
+          };
+
+          if (response.status == 200) {
+            console.log("ok");
+            const updateProduct = this.products.products.filter(
+              (p) => p.id == id
+            )[0];
+            Object.assign(updateProduct, updateObject);
+            currentResult.success = true;
+          }
+          result.push(currentResult);
+        })
+      );
+      this.showPricingDialog = false;
+      const failItems = result.filter(item => item.success == false);
+      if (failItems.length == 0) {
+        this.quasarNotify.notify({
+          message: `Update successfully `,
+          position: "top-right",
+          type: "positive",
+        });
+      } else {
+        const isFailItems = result.filter((item) => !item.success);
+        this.quasarNotify.notify({
+          message: "Update failed item id: " + isFailItems.map(item => item.id),
+          position: "top-right",
+          type: "negative",
+        });
+      }
     },
   },
 };
