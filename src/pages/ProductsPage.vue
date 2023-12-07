@@ -73,8 +73,10 @@
   <ProductDialog
     v-model="createProductDialog"
     :showPopup="createProductDialog"
-    @createProduct="hanldeCreateProduct"
     :typeOfDialog="typeOfDialog"
+    :currentUpdateProduct="currentUpdateProduct"
+    @createProduct="hanldeCreateProduct"
+    @updateProduct="hanldeUpdateProduct"
   />
 </template>
 
@@ -94,10 +96,11 @@ export default {
     const confirmDelete = ref(false);
     const currentProductId = ref(-1);
     const createProductDialog = ref(false);
-    const rowsPerPage = ref(10);
+    const rowsPerPage = ref(13);
     const quasarNotify = useQuasar();
     const typeOfDialog = ref("create");
     const searchValue = ref("");
+    const currentUpdateProduct = ref([]);
     const columns = [
       {
         name: "title",
@@ -187,6 +190,7 @@ export default {
       // product,
       searchValue,
       typeOfDialog,
+      currentUpdateProduct,
     };
   },
 
@@ -232,8 +236,8 @@ export default {
         .then((res) => res.json())
         .then((res) => {
           this.products.products.push(res);
-          this.createProductDialog = false;
           product = [];
+          this.createProductDialog = false;
           this.quasarNotify.notify({
             message: "Create new product successfully",
             position: "top-right",
@@ -260,6 +264,12 @@ export default {
       })
         .then((res) => res.json())
         .then((res) => {
+          const updateProduct = this.products.products.filter(
+            (p) => p.id == id
+          )[0];
+          Object.assign(updateProduct, updateObject);
+          product = [];
+          this.createProductDialog = false;
           this.quasarNotify.notify({
             message: "Update successfully",
             position: "top-right",
@@ -276,18 +286,23 @@ export default {
         });
     },
     showCreateDialog() {
-      this.typeOfDialog = 'create';
+      this.typeOfDialog = "create";
       this.createProductDialog = true;
+      this.currentUpdateProduct = [];
     },
     showUpdateDialog(proID) {
-      const product = this.products.products.filter((p) => p.id == proID);
-      this.typeOfDialog = 'update';
-      console.log(product);
+      const product = this.products.products.filter((p) => p.id == proID)[0];
+      this.typeOfDialog = "update";
+      this.currentUpdateProduct = { ...product };
       this.createProductDialog = true;
+      console.log("parent", product);
     },
 
     handleSearchProduct() {
       console.log(this.searchValue);
+    },
+    ShowSth() {
+      console.log(this.selectedProduct[0]);
     },
   },
 };

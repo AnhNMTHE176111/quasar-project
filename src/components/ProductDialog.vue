@@ -1,17 +1,21 @@
 <template>
   <q-dialog :show="showPopup">
     <q-card style="width: 700px; max-width: 80vw">
-      <q-card-section>
+      <q-card-senction>
         <div class="text-h6" v-if="typeOfDialog == 'update'">
-          Update Product
+          Update Product {{ currentUpdateProduct.id }}
         </div>
-        <div class="text-h6" v-else>Create Product {{ typeOfDialog }} </div>
-      </q-card-section>
+        <div class="text-h6" v-else>Create Product</div>
+      </q-card-senction>
 
       <q-card-section class="q-pt-none">
         <q-form
           class="col-5 q-gutter-md"
-          @submit.prevent="submitHandler"
+          @submit.prevent="
+            typeOfDialog == 'update'
+              ? $emit('updateProduct', product)
+              : $emit('createProduct', product)
+          "
         >
           <div class="col">
             <q-input
@@ -92,6 +96,7 @@
           <div class="row justify-end">
             <q-btn
               color="dark"
+              type="reset"
               icon="cancel"
               label="Cancel"
               class="q-ma-sm"
@@ -127,26 +132,34 @@ import { onMounted, ref } from "vue";
 export default {
   props: {
     typeOfDialog: String,
-    product_id: Number,
+    currentUpdateProduct: Object,
     showPopup: Boolean,
   },
   emits: ["updateProduct", "createProduct"],
   computed: {
     submitHandler() {
-      return this.typeOfDialog == 'update'
-      ? `$emit('updateProduct', product)`
-      : `$emit('createProduct', product)`
-    }
+      return this.typeOfDialog == "update"
+        ? "$emit('updateProduct', product)"
+        : "$emit('createProduct', product)";
+    },
   },
-  setup() {
+  setup(props) {
     const product = ref([]);
+
     return {
       product,
     };
   },
-  methods: {
-
-
+  watch: {
+    currentUpdateProduct(newValue, oldValue) {
+      this.product = newValue;
+    },
+    // typeOfDialog(newVal, oldVal) {
+    //   if(newVal == 'update') {
+    //     this.product = [];
+    //   }
+    // }
   },
+  methods: {},
 };
 </script>
