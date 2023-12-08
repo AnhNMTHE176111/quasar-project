@@ -1,6 +1,6 @@
 <template>
   <q-dialog :show="showViewProduct">
-    <q-card class="my-card">
+    <q-card style="width: 700px; max-width: 80vw">
       <q-img :src="product.thumbnail" />
 
       <q-card-section>
@@ -21,17 +21,31 @@
       <q-separator />
 
       <q-card-actions align="right">
-        <q-btn v-close-popup flat color="primary" label="Close" />
+        <q-btn
+          v-close-popup
+          flat
+          color="primary"
+          icon="edit"
+          label="edit"
+          @click="$emit('openProductUpdateDialog', product.id)"
+        />
+        <q-btn
+          v-close-popup
+          flat
+          color="secondary"
+          icon="close"
+          label="Close"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script>
-import { ref } from "vue";
 export default {
   name: "ProductViewCard",
   props: { product: Object, showViewProduct: Boolean },
+  emits: ["openProductUpdateDialog"],
   computed: {
     // rating: this.product.rating.toFixed() || "",
   },

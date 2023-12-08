@@ -87,6 +87,7 @@
     v-model="showViewProduct"
     :showViewProduct="showViewProduct"
     :product="productViewing"
+    @openProductUpdateDialog="openProductUpdateDialog"
   />
   <BulkPricingDialog
     v-model="showPricingDialog"
@@ -314,6 +315,10 @@ export default {
       this.typeOfDialog = "create";
       this.createProductDialog = true;
       this.currentUpdateProduct = [];
+    },
+    openProductUpdateDialog(id) {
+      console.log(id);
+      showUpdateDialog(id);
     },
     showUpdateDialog(proID) {
       const product = this.products.products.filter((p) => p.id == proID)[0];
