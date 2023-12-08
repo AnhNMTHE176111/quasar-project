@@ -8,7 +8,7 @@
           <div class="col text-h6 ellipsis">{{ product.title }}</div>
         </div>
 
-        <q-rating :model-value="product.rating" :max="5" size="32px" />
+        <q-rating :model-value="product.rating.toFixed()" :max="5" size="32px" />
       </q-card-section>
 
       <q-card-section class="q-pt-none">

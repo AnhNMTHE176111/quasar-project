@@ -2,14 +2,14 @@
   <div class="q-pa-md">
     <q-table
       title="Products"
-      :rows="rows"
+      :rows="products"
       :columns="columns"
       :rows-per-page-options="[rowsPerPage]"
       row-key="id"
       selection="multiple"
       v-model:selected="selectedProduct"
     >
-      <template v-slot:top-left>
+      <!-- <template v-slot:top-left>
         <q-input
           v-model="searchValue"
           @input="handleSearchProduct"
@@ -20,6 +20,7 @@
           </template>
         </q-input>
       </template>
+
       <template v-slot:top-right>
         <q-btn
           v-show="selectedProduct.length > 0"
@@ -29,6 +30,101 @@
           @click="ShowSth"
         />
         <q-btn class="q-ma-md" icon="add" @click="showCreateDialog" />
+      </template> -->
+
+      <template v-slot:top>
+        <div class="row justify-between col-12">
+          <div class="col-1 row justify-start">
+            <q-input
+              v-model="searchValue"
+              @input="handleSearchProduct"
+              label="Search"
+            >
+              <template v-slot:append>
+                <q-icon name="search" />
+              </template>
+            </q-input>
+          </div>
+          <div class="col-8 row q-gutter-xl">
+            <div class="row">
+              <q-select
+                class="btn"
+                label="Category"
+                v-model="chooseCategory"
+                :options="categories"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="category" />
+                </template>
+              </q-select>
+              <q-btn
+                class="q-ma-md"
+                icon="restart_alt"
+                @click="resetCategory"
+                v-if="chooseCategory"
+              />
+            </div>
+            <!-- Code here -->
+            <div>
+              <form
+                action=""
+                class="row q-gutter-sm"
+                @reset.prevent="filterFormReset"
+                @submit.prevent="filterFormSubmit"
+              >
+                <q-input
+                  v-model="priceFrom"
+                  type="number"
+                  class="col-2"
+                  label="Price From"
+                  error-message="Please type correct number"
+                  :error="!validFilterPrice"
+                />
+                <q-input
+                  v-model="priceTo"
+                  type="number"
+                  class="col-2"
+                  label="Price To "
+                  error-message="Please type correct number"
+                  :error="!validFilterPrice"
+                />
+                <q-select v-model="selectedRating" :options="rating">
+                  <template v-slot:prepend>
+                    <q-icon name="star" />
+                  </template>
+                </q-select>
+                <div class="row">
+                  <q-btn
+                    icon="tune"
+                    class="q-ma-md"
+                    color="primary"
+                    type="submit"
+                  />
+                  <q-btn
+                    icon="filter_list_off"
+                    class="q-ma-md"
+                    color="negative"
+                    type="reset"
+                    v-show="
+                      (priceFrom && priceFrom <= priceTo) || selectedRating
+                    "
+                  />
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="col-3 row justify-end">
+            <q-btn
+              v-show="selectedProduct.length > 0"
+              color="primary"
+              icon="payment"
+              label="Bulk Pricing"
+              class="q-ma-md"
+              @click="ShowSth"
+            />
+            <q-btn class="q-ma-md" icon="add" @click="showCreateDialog" />
+          </div>
+        </div>
       </template>
 
       <template v-slot:body-cell-action="{ row }">
@@ -111,8 +207,8 @@ export default {
   },
   setup() {
     const selectedProduct = ref([]);
+    const productsDataRaw = ref([]);
     const products = ref([]);
-    const rows = ref([]);
     const confirmDelete = ref(false);
     const createProductDialog = ref(false);
     const currentProductId = ref(-1);
@@ -124,6 +220,8 @@ export default {
     const showViewProduct = ref(false);
     const showPricingDialog = ref(false);
     const currentUpdateProduct = ref([]);
+    const categories = ref([]);
+    const chooseCategory = ref(null);
     const columns = [
       {
         name: "title",
@@ -189,34 +287,43 @@ export default {
     ];
 
     async function fetchData() {
-      const responseTotal = await fetch("https://dummyjson.com/products");
-      const total = (await responseTotal.json()).total;
-      const responseProducts = await fetch(
-        `https://dummyjson.com/products?limit=${total}`
+      const responseCategories = await fetch(
+        "https://dummyjson.com/products/categories"
       );
-      products.value = await responseProducts.json();
-      rows.value = await products.value.products;
+      categories.value = await responseCategories.json();
+      const responseProducts = await fetch(
+        `https://dummyjson.com/products?limit=0`
+      );
+      productsDataRaw.value = await responseProducts.json();
+      products.value = await productsDataRaw.value.products;
     }
 
     onMounted(() => fetchData());
 
     return {
       products,
+      productsDataRaw,
       columns,
-      rows,
       quasarNotify,
       selectedProduct,
       confirmDelete,
       createProductDialog,
       rowsPerPage,
       currentProductId,
-      // product,
       searchValue,
       typeOfDialog,
       currentUpdateProduct,
       productViewing,
       showViewProduct,
       showPricingDialog,
+      chooseCategory,
+      categories,
+      selectedRating: ref(null),
+      priceFrom: ref(null),
+      priceTo: ref(null),
+      rating: [1, 2, 3, 4, 5],
+      filterOff: ref(false),
+      validFilterPrice: ref(true),
     };
   },
 
@@ -243,11 +350,13 @@ export default {
         }
       );
       const deletedProduct = await response.json();
-      const index = this.products.products.findIndex(
+      const index = this.productsDataRaw.products.findIndex(
         (product) => product.id == deletedProduct.id
       );
-      this.products.products.splice(index, 1);
-
+      this.products.splice(index, 1);
+      this.productsDataRaw.products.splice(index, 1);
+      console.log("leng data", this.productsDataRaw.products.length);
+      console.log("leng sub", this.products.length);
       this.confirmDelete = false;
       this.currentProductId = -1;
     },
@@ -261,7 +370,8 @@ export default {
       })
         .then((res) => res.json())
         .then((res) => {
-          this.products.products.push(res);
+          this.products.push(res);
+          this.productsDataRaw.products.push(res);
           product = [];
           this.createProductDialog = false;
           this.quasarNotify.notify({
@@ -281,6 +391,7 @@ export default {
     },
     async hanldeUpdateProduct(product) {
       const { id, ...updateObject } = product;
+      updateObject.rating = parseFloat(updateObject.rating)
       await fetch(`https://dummyjson.com/products/${id}`, {
         method: "PUT" /* or PATCH */,
         headers: { "Content-Type": "application/json" },
@@ -290,7 +401,7 @@ export default {
       })
         .then((res) => res.json())
         .then((res) => {
-          const updateProduct = this.products.products.filter(
+          const updateProduct = this.productsDataRaw.products.filter(
             (p) => p.id == id
           )[0];
           Object.assign(updateProduct, updateObject);
@@ -310,33 +421,6 @@ export default {
             type: "negative",
           });
         });
-    },
-    showCreateDialog() {
-      this.typeOfDialog = "create";
-      this.createProductDialog = true;
-      this.currentUpdateProduct = [];
-    },
-    openProductUpdateDialog(id) {
-      console.log(id);
-      showUpdateDialog(id);
-    },
-    showUpdateDialog(proID) {
-      const product = this.products.products.filter((p) => p.id == proID)[0];
-      this.typeOfDialog = "update";
-      this.currentUpdateProduct = { ...product };
-      this.createProductDialog = true;
-      console.log("parent", product);
-    },
-    showViewingProductDialog(proID) {
-      const product = this.products.products.filter((p) => p.id == proID)[0];
-      this.productViewing = { ...product };
-      this.showViewProduct = true;
-    },
-    handleSearchProduct() {
-      console.log(this.searchValue);
-    },
-    ShowSth() {
-      this.showPricingDialog = true;
     },
     async hanldBulkPricing(updatePrice, updateDiscount) {
       let result = [];
@@ -360,7 +444,7 @@ export default {
 
           if (response.status == 200) {
             console.log("ok");
-            const updateProduct = this.products.products.filter(
+            const updateProduct = this.productsDataRaw.products.filter(
               (p) => p.id == id
             )[0];
             Object.assign(updateProduct, updateObject);
@@ -370,7 +454,7 @@ export default {
         })
       );
       this.showPricingDialog = false;
-      const failItems = result.filter(item => item.success == false);
+      const failItems = result.filter((item) => item.success == false);
       if (failItems.length == 0) {
         this.quasarNotify.notify({
           message: `Update successfully `,
@@ -380,11 +464,119 @@ export default {
       } else {
         const isFailItems = result.filter((item) => !item.success);
         this.quasarNotify.notify({
-          message: "Update failed item id: " + isFailItems.map(item => item.id),
+          message:
+            "Update failed item id: " + isFailItems.map((item) => item.id),
           position: "top-right",
           type: "negative",
         });
       }
+    },
+    showCreateDialog() {
+      this.typeOfDialog = "create";
+      this.createProductDialog = true;
+      this.currentUpdateProduct = [];
+    },
+    showUpdateDialog(proID) {
+      const product = this.productsDataRaw.products.filter(
+        (p) => p.id == proID
+      )[0];
+      this.typeOfDialog = "update";
+      this.currentUpdateProduct = { ...product };
+      this.createProductDialog = true;
+    },
+    showViewingProductDialog(proID) {
+      const product = this.productsDataRaw.products.filter(
+        (p) => p.id == proID
+      )[0];
+      this.productViewing = { ...product };
+      this.showViewProduct = true;
+    },
+    openProductUpdateDialog(id) {
+      this.showUpdateDialog(id);
+    },
+    ShowSth() {
+      this.showPricingDialog = true;
+    },
+    resetCategory() {
+      this.chooseCategory = "";
+    },
+    filterFormReset() {
+      this.priceFrom = "";
+      this.priceTo = "";
+      this.selectedRating = null;
+      this.products = [...this.productsDataRaw.products]
+    },
+    filterFormSubmit() {
+      if (
+        parseInt(this.priceTo) <= parseInt(this.priceFrom) &&
+        !isNaN(parseInt(this.priceFrom)) &&
+        !isNaN(parseInt(this.priceFrom))
+      ) {
+        this.validFilterPrice = false;
+      }
+      let filterPrice = false;
+
+      if (
+        parseInt(this.priceTo) >= parseInt(this.priceFrom) &&
+        !isNaN(parseInt(this.priceFrom)) &&
+        !isNaN(parseInt(this.priceFrom))
+      ) {
+        filterPrice = true;
+      }
+
+      console.log("this.validFilterPrice", this.validFilterPrice);
+      console.log("this.selectedRating", this.selectedRating);
+      let filteredData = this.productsDataRaw.products;
+
+      // case 1
+      if (filterPrice && this.selectedRating) {
+        console.log("case 1");
+        filteredData = this.productsDataRaw.products.filter(
+          (p) =>
+            p.price >= this.priceFrom &&
+            p.price <= this.priceTo &&
+            parseFloat(p.rating).toFixed() == this.selectedRating
+        );
+      }
+
+      // case 2
+      if (filterPrice && this.selectedRating == null) {
+        console.log("case 2");
+        filteredData = this.productsDataRaw.products.filter(
+          (p) => p.price >= this.priceFrom && p.price <= this.priceTo
+        );
+      }
+
+      // case 3
+      if (!filterPrice && this.selectedRating) {
+        console.log("case 3", this.selectedRating);
+        this.productsDataRaw.products.map(p => console.log(parseInt(p.rating)))
+        filteredData = this.productsDataRaw.products.filter(
+          (p) => parseFloat(p.rating).toFixed() == this.selectedRating
+        );
+      }
+
+      console.log(filteredData);
+      this.products = [...filteredData];
+    },
+  },
+  watch: {
+    chooseCategory(newVal, oldVal) {
+      if (newVal == "") {
+        this.products = [...this.productsDataRaw.products];
+      } else {
+        let filteredData = this.productsDataRaw.products.filter(
+          (p) => p.category == newVal
+        );
+        this.products = [...filteredData];
+      }
+    },
+    products(newVal, oldVal) {},
+    searchValue(newVal, oldVal) {
+      let filteredData = this.productsDataRaw.products.filter((p) =>
+        p.title.toLowerCase().includes(newVal.toLowerCase())
+      );
+      this.products = [...filteredData];
     },
   },
 };
