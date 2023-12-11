@@ -37,9 +37,10 @@
           <div class="col-1 row justify-start">
             <q-input
               v-model="searchValue"
-              @input="handleSearchProduct"
+              v-on:keyup="handleSearchProduct"
               label="Search"
-            >
+              >
+              <!-- @update:model-value="(e) => handleSearchProduct(e)" -->
               <template v-slot:append>
                 <q-icon name="search" />
               </template>
@@ -198,6 +199,11 @@ import { onMounted, ref } from "vue";
 import ProductDialog from "../components/ProductDialog.vue";
 import ProductViewCard from "src/components/ProductViewCard.vue";
 import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
+import axios from "axios";
+
+const instanceAxios = axios.create({
+  baseURL: "https://dummyjson.com",
+});
 
 export default {
   components: {
@@ -286,19 +292,18 @@ export default {
       },
     ];
 
-    async function fetchData() {
-      const responseCategories = await fetch(
-        "https://dummyjson.com/products/categories"
+
+    async function getData() {
+      const responseCategories = await instanceAxios.get(
+        "/products/categories"
       );
-      categories.value = await responseCategories.json();
-      const responseProducts = await fetch(
-        `https://dummyjson.com/products?limit=0`
-      );
-      productsDataRaw.value = await responseProducts.json();
+      categories.value = await responseCategories.data;
+      const responseProducts = await instanceAxios.get(`/products?limit=0`);
+      productsDataRaw.value = await responseProducts.data;
       products.value = await productsDataRaw.value.products;
     }
 
-    onMounted(() => fetchData());
+    onMounted(() => getData());
 
     return {
       products,
@@ -343,13 +348,10 @@ export default {
       this.currentProductId = id;
     },
     async handleDeleteProduct() {
-      const response = await fetch(
-        `https://dummyjson.com/products/${this.currentProductId}`,
-        {
-          method: "DELETE",
-        }
+      const response = await instanceAxios.delete(
+        `/products/${this.currentProductId}`
       );
-      const deletedProduct = await response.json();
+      const deletedProduct = await response.data;
       const index = this.productsDataRaw.products.findIndex(
         (product) => product.id == deletedProduct.id
       );
@@ -361,46 +363,36 @@ export default {
       this.currentProductId = -1;
     },
     async hanldeCreateProduct(product) {
-      await fetch("https://dummyjson.com/products/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      try {
+        const response = await instanceAxios.post("/products/add", {
           ...product,
-        }),
-      })
-        .then((res) => res.json())
-        .then((res) => {
-          this.products.push(res);
-          this.productsDataRaw.products.push(res);
-          product = [];
-          this.createProductDialog = false;
-          this.quasarNotify.notify({
-            message: "Create new product successfully",
-            position: "top-right",
-            type: "positive",
-          });
-        })
-        .catch((e) => {
-          console.log(e);
-          this.quasarNotify.notify({
-            message: "Create new product failed",
-            position: "top-right",
-            type: "negative",
-          });
         });
+        this.products.push(response.data);
+        product = [];
+        this.createProductDialog = false;
+        this.quasarNotify.notify({
+          message: "Create new product successfully",
+          position: "top-right",
+          type: "positive",
+        });
+      } catch (error) {
+        console.log(error);
+        this.quasarNotify.notify({
+          message: "Create new product failed",
+          position: "top-right",
+          type: "negative",
+        });
+      }
     },
     async hanldeUpdateProduct(product) {
       const { id, ...updateObject } = product;
-      updateObject.rating = parseFloat(updateObject.rating)
-      await fetch(`https://dummyjson.com/products/${id}`, {
-        method: "PUT" /* or PATCH */,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      updateObject.rating = parseFloat(updateObject.rating);
+
+      try {
+        const response = await instanceAxios.put(`/products/${id}`, {
           ...updateObject,
-        }),
-      })
-        .then((res) => res.json())
-        .then((res) => {
+        });
+        if (response.status === 200) {
           const updateProduct = this.productsDataRaw.products.filter(
             (p) => p.id == id
           )[0];
@@ -412,15 +404,15 @@ export default {
             position: "top-right",
             type: "positive",
           });
-        })
-        .catch((e) => {
-          console.log(e);
-          this.quasarNotify.notify({
-            message: "Update failed",
-            position: "top-right",
-            type: "negative",
-          });
+        }
+      } catch (error) {
+        console.log(error);
+        this.quasarNotify.notify({
+          message: "Update failed",
+          position: "top-right",
+          type: "negative",
         });
+      }
     },
     async hanldBulkPricing(updatePrice, updateDiscount) {
       let result = [];
@@ -430,12 +422,8 @@ export default {
           const { id, ...updateObject } = product;
           updateObject.price = parseInt(updatePrice);
           updateObject.discountPercentage = parseInt(updateDiscount);
-          const response = await fetch(`https://dummyjson.com/products/${id}`, {
-            method: "PUT" /* or PATCH */,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              ...updateObject,
-            }),
+          const response = await instanceAxios.put(`/products/${id}`, {
+            ...updateObject,
           });
           let currentResult = {
             id: id,
@@ -443,7 +431,6 @@ export default {
           };
 
           if (response.status == 200) {
-            console.log("ok");
             const updateProduct = this.productsDataRaw.products.filter(
               (p) => p.id == id
             )[0];
@@ -504,7 +491,7 @@ export default {
       this.priceFrom = "";
       this.priceTo = "";
       this.selectedRating = null;
-      this.products = [...this.productsDataRaw.products]
+      this.products = [...this.productsDataRaw.products];
     },
     filterFormSubmit() {
       if (
@@ -550,7 +537,9 @@ export default {
       // case 3
       if (!filterPrice && this.selectedRating) {
         console.log("case 3", this.selectedRating);
-        this.productsDataRaw.products.map(p => console.log(parseInt(p.rating)))
+        this.productsDataRaw.products.map((p) =>
+          console.log(parseInt(p.rating))
+        );
         filteredData = this.productsDataRaw.products.filter(
           (p) => parseFloat(p.rating).toFixed() == this.selectedRating
         );
@@ -558,6 +547,17 @@ export default {
 
       console.log(filteredData);
       this.products = [...filteredData];
+    },
+    handleSearchProduct() {
+      setTimeout(async () => {
+        console.log("searchValue", this.searchValue);
+        let response = await instanceAxios(`/products/search?q=${this.searchValue}`);
+        // let filteredData = this.productsDataRaw.products.filter((p) =>
+        //   p.title.toLowerCase().includes(searchValue.toLowerCase())
+        // );
+        console.log(response.data);
+        this.products = response.data;
+      }, 1500);
     },
   },
   watch: {
@@ -570,13 +570,6 @@ export default {
         );
         this.products = [...filteredData];
       }
-    },
-    products(newVal, oldVal) {},
-    searchValue(newVal, oldVal) {
-      let filteredData = this.productsDataRaw.products.filter((p) =>
-        p.title.toLowerCase().includes(newVal.toLowerCase())
-      );
-      this.products = [...filteredData];
     },
   },
 };
