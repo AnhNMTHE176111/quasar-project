@@ -37,9 +37,9 @@
           <div class="col-1 row justify-start">
             <q-input
               v-model="searchValue"
-              v-on:keyup="handleSearchProduct"
+              @keyup="handleSearchProduct"
               label="Search"
-              >
+            >
               <!-- @update:model-value="(e) => handleSearchProduct(e)" -->
               <template v-slot:append>
                 <q-icon name="search" />
@@ -292,7 +292,6 @@ export default {
       },
     ];
 
-
     async function getData() {
       const responseCategories = await instanceAxios.get(
         "/products/categories"
@@ -329,6 +328,8 @@ export default {
       rating: [1, 2, 3, 4, 5],
       filterOff: ref(false),
       validFilterPrice: ref(true),
+      timeout: ref(null),
+      oldSearchvalue: ref(""),
     };
   },
 
@@ -549,17 +550,24 @@ export default {
       this.products = [...filteredData];
     },
     handleSearchProduct() {
-      setTimeout(async () => {
-        console.log("searchValue", this.searchValue);
-        let response = await instanceAxios(`/products/search?q=${this.searchValue}`);
-        // let filteredData = this.productsDataRaw.products.filter((p) =>
-        //   p.title.toLowerCase().includes(searchValue.toLowerCase())
-        // );
-        console.log(response.data);
-        this.products = response.data;
-      }, 1500);
+      clearTimeout(this.timeout);
+      if (this.oldSearchvalue != this.searchValue) {
+        this.timeout = setTimeout(async () => {
+          let response = await instanceAxios(
+            `/products/search?q=${this.searchValue}`
+          );
+          this.products =  [...response.data.products];
+        }, 700);
+      }
+      if(this.searchValue == '') {
+        this.products = this.productsDataRaw.products
+      }
+      this.oldSearchvalue = this.searchValue
     },
   },
+  // let filteredData = this.productsDataRaw.products.filter((p) =>
+  //   p.title.toLowerCase().includes(searchValue.toLowerCase())
+  // );
   watch: {
     chooseCategory(newVal, oldVal) {
       if (newVal == "") {
