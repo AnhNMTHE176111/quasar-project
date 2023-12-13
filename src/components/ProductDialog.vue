@@ -1,6 +1,6 @@
 <template>
   <q-dialog :show="showPopup">
-    <q-card style="width: 700px; max-width: 80vw">
+    <q-card style="width: 700px; max-width: 80vw" class="q-pa-sm">
       <q-card-senction>
         <div class="text-h6" v-if="typeOfDialog == 'update'">
           Update Product {{ currentUpdateProduct.id }}

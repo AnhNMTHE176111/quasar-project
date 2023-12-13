@@ -8,14 +8,15 @@ UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK =========================
-category => api
 sidebar = user + category
-addeventlistener => watch
-table lẹch
 sort price by current page
-pagination real
-có phần chọn rowsperpage (5, 10, 15,...)
+update hay add xong cho nhảy lên đầu, hoặc có cái gì để biết mới update
 
+table lẹch <ok>
+pagination real <ok>
+có phần chọn rowsperpage (5, 10, 15,...) <ok>
+category => api <ok>
+addeventlistener => watch <ok>
 search => api <ok>
 axios => fetch <ok>
 filter -> khoảng giá, khoảng stock, rating select (1-5), brand <ok>

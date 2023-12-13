@@ -2,36 +2,13 @@
   <div class="q-pa-md">
     <q-table
       title="Products"
-      :rows="products"
-      :columns="columns"
-      :rows-per-page-options="[rowsPerPage]"
-      row-key="id"
       selection="multiple"
-      v-model:selected="selectedProduct"
+      :rows-per-page-options="rowsPerPageOptions"
+      :loading="loading"
+      :columns="columns"
+      :rows="products"
+      :pagination="pagination"
     >
-      <!-- <template v-slot:top-left>
-        <q-input
-          v-model="searchValue"
-          @input="handleSearchProduct"
-          label="Search"
-        >
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </template>
-
-      <template v-slot:top-right>
-        <q-btn
-          v-show="selectedProduct.length > 0"
-          color="primary"
-          icon="payment"
-          label="Bulk Pricing"
-          @click="ShowSth"
-        />
-        <q-btn class="q-ma-md" icon="add" @click="showCreateDialog" />
-      </template> -->
-
       <template v-slot:top>
         <div class="row justify-between col-12">
           <div class="col-1 row justify-start">
@@ -40,7 +17,6 @@
               @keyup="handleSearchProduct"
               label="Search"
             >
-              <!-- @update:model-value="(e) => handleSearchProduct(e)" -->
               <template v-slot:append>
                 <q-icon name="search" />
               </template>
@@ -53,6 +29,7 @@
                 label="Category"
                 v-model="chooseCategory"
                 :options="categories"
+                @update:model-value="handleFilterByCategory"
               >
                 <template v-slot:prepend>
                   <q-icon name="category" />
@@ -128,25 +105,127 @@
         </div>
       </template>
 
-      <template v-slot:body-cell-action="{ row }">
-        <q-btn
-          flat
-          icon="visibility"
-          color="primary"
-          @click="showViewingProductDialog(row.id)"
-        />
-        <q-btn
-          flat
-          icon="edit"
-          color="primary"
-          @click="showUpdateDialog(row.id)"
-        />
-        <q-btn
-          flat
-          icon="delete"
-          color="negative"
-          @click="openConfirmDeleteDialog(row.id)"
-        />
+      <template v-slot:header="props">
+        <q-tr :props="props">
+          <q-th :auto-width="false">
+            <q-checkbox
+              v-model="selectedAll"
+              :true-value="true"
+              :false-value="false"
+              @update:model-value="selectedAllProducts"
+            />
+          </q-th>
+          <q-th v-for="col in props.cols" :key="col" :style="col.style">
+            {{ col.label }}
+          </q-th>
+        </q-tr>
+
+        <!-- <q-tr :key="props" class="text-center">
+          <q-td>
+            <q-checkbox v-model="selectedProduct" :val="item1" />
+          </q-td>
+          <q-td> Item 1 </q-td>
+        </q-tr> -->
+      </template>
+
+      <template v-slot:body="props">
+        <q-tr :key="props" class="text-center">
+          <q-td>
+            <q-checkbox v-model="selectedProduct" :val="props.row.id" />
+          </q-td>
+          <q-td class="text-left">
+            {{ props.row.title }}
+          </q-td>
+          <q-td class="text-left">
+            {{ props.row.brand }}
+          </q-td>
+          <q-td class="text-left">
+            {{ props.row.category }}
+          </q-td>
+          <q-td>
+            {{ props.row.price }}
+          </q-td>
+          <q-td>
+            {{ props.row.discountPercentage }}
+          </q-td>
+          <q-td>
+            {{ props.row.rating }}
+          </q-td>
+          <q-td>
+            {{ props.row.stock }}
+          </q-td>
+          <q-td>
+            <q-btn
+              flat
+              icon="visibility"
+              color="primary"
+              @click="showViewingProductDialog(props.row.id)"
+            />
+            <q-btn
+              flat
+              icon="edit"
+              color="primary"
+              @click="showUpdateDialog(props.row.id)"
+            />
+            <q-btn
+              flat
+              icon="delete"
+              color="negative"
+              @click="openConfirmDeleteDialog(props.row.id)"
+            />
+          </q-td>
+        </q-tr>
+      </template>
+
+      <template v-slot:bottom="">
+        <div class="row justify-between col-12">
+          <div class="col-2 row justify-start">a</div>
+          <div class="col-8 row justify-center">
+            <q-pagination
+              :max="rowsNumber"
+              max-pages="6"
+              v-model="currentPage"
+              flat
+              color="grey"
+              active-color="primary"
+              @update:model-value="
+                () => {
+                  selectedAll = false;
+                  hanldeChangeData(
+                    `/products?limit=${this.rowsPerPage}&skip=${
+                      this.rowsPerPage * (this.currentPage - 1)
+                    }`
+                  );
+                }
+              "
+            />
+          </div>
+          <div class="col-2 row justify-end">
+            <q-select
+              :options="rowsPerPageOptions"
+              v-model="rowsPerPage"
+              dense
+              options-dense
+              class="row"
+              @update:model-value="
+                () => {
+                  this.currentPage = 1;
+                  hanldeChangeData(
+                    `/products?limit=${this.rowsPerPage}&skip=${
+                      this.rowsPerPage * (this.currentPage - 1)
+                    }`
+                  );
+                }
+              "
+            >
+              <template v-slot:before>
+                <div class="text-subtitle2 text-weight-bold">
+                  Records per page
+                </div>
+              </template>
+            </q-select>
+          </div>
+        </div>
       </template>
     </q-table>
   </div>
@@ -196,10 +275,16 @@
 <script>
 import { useQuasar } from "quasar";
 import { onMounted, ref } from "vue";
+import _ from "lodash";
 import ProductDialog from "../components/ProductDialog.vue";
 import ProductViewCard from "src/components/ProductViewCard.vue";
 import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
 import axios from "axios";
+
+// let a = [1 , 2, 3];
+// let b = [2, 5, 5];
+// let c = _.union(a, b)
+// console.log(c);
 
 const instanceAxios = axios.create({
   baseURL: "https://dummyjson.com",
@@ -211,6 +296,9 @@ export default {
     ProductViewCard,
     BulkPricingDialog,
   },
+  mounted() {
+    this.getData();
+  },
   setup() {
     const selectedProduct = ref([]);
     const productsDataRaw = ref([]);
@@ -218,7 +306,6 @@ export default {
     const confirmDelete = ref(false);
     const createProductDialog = ref(false);
     const currentProductId = ref(-1);
-    const rowsPerPage = ref(13);
     const quasarNotify = useQuasar();
     const typeOfDialog = ref("create");
     const searchValue = ref("");
@@ -228,6 +315,17 @@ export default {
     const currentUpdateProduct = ref([]);
     const categories = ref([]);
     const chooseCategory = ref(null);
+    const loading = ref(false);
+
+    // pagination
+    const currentPage = ref(1);
+    const rowsNumber = ref(0);
+    const rowsPerPage = ref(13);
+    const pagination = ref({
+      page: currentPage.value,
+      rowsPerPage: rowsPerPage.value,
+      rowsNumber: rowsNumber.value,
+    });
     const columns = [
       {
         name: "title",
@@ -236,6 +334,7 @@ export default {
         required: true,
         sortable: true,
         align: "left",
+        style: "width: 300px",
       },
       {
         name: "brand",
@@ -244,6 +343,7 @@ export default {
         required: true,
         sortable: true,
         align: "left",
+        style: "width: 200px",
       },
       {
         name: "category",
@@ -252,6 +352,7 @@ export default {
         required: true,
         sortable: true,
         align: "left",
+        style: "width: 120px",
       },
       {
         name: "price",
@@ -292,18 +393,6 @@ export default {
       },
     ];
 
-    async function getData() {
-      const responseCategories = await instanceAxios.get(
-        "/products/categories"
-      );
-      categories.value = await responseCategories.data;
-      const responseProducts = await instanceAxios.get(`/products?limit=0`);
-      productsDataRaw.value = await responseProducts.data;
-      products.value = await productsDataRaw.value.products;
-    }
-
-    onMounted(() => getData());
-
     return {
       products,
       productsDataRaw,
@@ -312,7 +401,6 @@ export default {
       selectedProduct,
       confirmDelete,
       createProductDialog,
-      rowsPerPage,
       currentProductId,
       searchValue,
       typeOfDialog,
@@ -330,10 +418,30 @@ export default {
       validFilterPrice: ref(true),
       timeout: ref(null),
       oldSearchvalue: ref(""),
+      loading,
+      currentPage,
+      rowsPerPage,
+      rowsNumber,
+      pagination,
+      selectedAll: ref(false),
+      rowsPerPageOptions: ref([13, 5, 10, 15, 20]),
     };
   },
 
   methods: {
+    async getData() {
+      const responseCategories = await instanceAxios.get(
+        "/products/categories"
+      );
+
+      this.categories = await responseCategories.data;
+
+      this.hanldeChangeData(
+        `/products?limit=${this.rowsPerPage}&skip=${
+          this.rowsPerPage * (this.currentPage - 1)
+        }`
+      );
+    },
     getValueCell(field, row) {
       if (field == "isDeleted") {
         if (row[field] === true) {
@@ -416,15 +524,12 @@ export default {
       }
     },
     async hanldBulkPricing(updatePrice, updateDiscount) {
-      let result = [];
-
+      let result = 0;
       await Promise.all(
-        this.selectedProduct.map(async (product) => {
-          const { id, ...updateObject } = product;
-          updateObject.price = parseInt(updatePrice);
-          updateObject.discountPercentage = parseInt(updateDiscount);
+        this.selectedProduct.map(async (id) => {
           const response = await instanceAxios.put(`/products/${id}`, {
-            ...updateObject,
+            price: parseInt(updatePrice),
+            discountPercentage: parseInt(updateDiscount),
           });
           let currentResult = {
             id: id,
@@ -435,7 +540,7 @@ export default {
             const updateProduct = this.productsDataRaw.products.filter(
               (p) => p.id == id
             )[0];
-            Object.assign(updateProduct, updateObject);
+            Object.assign(updateProduct, response.data);
             currentResult.success = true;
           }
           result.push(currentResult);
@@ -487,6 +592,7 @@ export default {
     },
     resetCategory() {
       this.chooseCategory = "";
+      this.products = this.productsDataRaw.products;
     },
     filterFormReset() {
       this.priceFrom = "";
@@ -551,33 +657,69 @@ export default {
     },
     handleSearchProduct() {
       clearTimeout(this.timeout);
-      if (this.oldSearchvalue != this.searchValue) {
+      if (this.oldSearchvalue != this.searchValue.trim()) {
         this.timeout = setTimeout(async () => {
-          let response = await instanceAxios(
-            `/products/search?q=${this.searchValue}`
-          );
-          this.products =  [...response.data.products];
+          let value = this.searchValue.trim().split(/\s+/g).join(" ");
+          this.hanldeChangeData(`/products/search?q=${value}`);
         }, 700);
       }
-      if(this.searchValue == '') {
-        this.products = this.productsDataRaw.products
+      if (this.searchValue == "") {
+        this.hanldeChangeData();
       }
-      this.oldSearchvalue = this.searchValue
+      this.oldSearchvalue = this.searchValue.trim();
     },
-  },
-  // let filteredData = this.productsDataRaw.products.filter((p) =>
-  //   p.title.toLowerCase().includes(searchValue.toLowerCase())
-  // );
-  watch: {
-    chooseCategory(newVal, oldVal) {
-      if (newVal == "") {
-        this.products = [...this.productsDataRaw.products];
+    async handleFilterByCategory() {
+      console.log(this.chooseCategory);
+      this.hanldeChangeData(`/products/category/${this.chooseCategory}`);
+    },
+    selectedAllProducts() {
+      if (this.selectedAll) {
+        this.products.map((item) => this.selectedProduct.push(item.id));
+        // this.selectedProduct = this.products;
       } else {
-        let filteredData = this.productsDataRaw.products.filter(
-          (p) => p.category == newVal
-        );
-        this.products = [...filteredData];
+        this.selectedProduct = [];
       }
+    },
+    async hanldeChangeData(api) {
+      this.loading = true;
+      let responseProducts = {};
+
+      // `/products?limit=${this.rowsPerPage}&skip=${
+      //                 this.rowsPerPage * (this.currentPage - 1)
+      //               }`
+
+      // case no need fetch api
+      let start = this.rowsPerPage * (this.currentPage - 1);
+      let end = start + this.rowsPerPage;
+      // for (let index = start; index < end; index++) {
+      //   if (this.productsDataRaw.products[index]) {
+      //     const element = this.productsDataRaw.products[index];
+      //     responseProducts.data.products.push(element);
+      //   }
+      // }
+      // if (responseProducts.data.products.length) {
+      if (this.productsDataRaw.products) {
+        console.log(start);
+        console.log(end);
+        let checkData = this.productsDataRaw.products.splice(start, end);
+        console.log('checkdata', checkData);
+      }
+      // case must fetch api
+      responseProducts = await instanceAxios.get(api);
+      let data = _.union(
+        responseProducts.data.products,
+        this.productsDataRaw.products
+      );
+      console.log('union data', data);
+      this.productsDataRaw = responseProducts.data;
+      this.productsDataRaw.products = [...data];
+      // }
+
+      this.products = responseProducts.data.products;
+      this.rowsNumber = Math.ceil(
+        responseProducts.data.total / this.rowsPerPage
+      );
+      this.loading = false;
     },
   },
 };
