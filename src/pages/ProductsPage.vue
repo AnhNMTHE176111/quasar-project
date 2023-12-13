@@ -280,6 +280,7 @@ import ProductDialog from "../components/ProductDialog.vue";
 import ProductViewCard from "src/components/ProductViewCard.vue";
 import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
 import axios from "axios";
+import { data } from "autoprefixer";
 
 // let a = [1 , 2, 3];
 // let b = [2, 5, 5];
@@ -394,6 +395,7 @@ export default {
     ];
 
     return {
+      data: [],
       products,
       productsDataRaw,
       columns,
@@ -682,40 +684,40 @@ export default {
     },
     async hanldeChangeData(api) {
       this.loading = true;
-      let responseProducts = {};
-
-      // `/products?limit=${this.rowsPerPage}&skip=${
-      //                 this.rowsPerPage * (this.currentPage - 1)
-      //               }`
-
-      // case no need fetch api
-      let start = this.rowsPerPage * (this.currentPage - 1);
+      let start = (this.currentPage - 1) * this.rowsPerPage;
       let end = start + this.rowsPerPage;
-      // for (let index = start; index < end; index++) {
-      //   if (this.productsDataRaw.products[index]) {
-      //     const element = this.productsDataRaw.products[index];
-      //     responseProducts.data.products.push(element);
-      //   }
-      // }
-      // if (responseProducts.data.products.length) {
-      if (this.productsDataRaw.products) {
-        console.log(start);
-        console.log(end);
-        let checkData = this.productsDataRaw.products.splice(start, end);
-        console.log('checkdata', checkData);
-      }
-      // case must fetch api
-      responseProducts = await instanceAxios.get(api);
-      let data = _.union(
-        responseProducts.data.products,
-        this.productsDataRaw.products
-      );
-      console.log('union data', data);
-      this.productsDataRaw = responseProducts.data;
-      this.productsDataRaw.products = [...data];
-      // }
+      console.log(start, end);
 
+      let checkdata = this.data;
+      for (let index = start; index < end; index++) {
+        const element = this.data[index];
+        console.log(element);
+        if(element) {
+          checkdata.push(element);
+        }
+      }
+      console.log(checkdata.length);
+      if(checkdata.length == this.rowsPerPage) {
+        console.log('success');
+      }
+      else {
+
+      }
+
+      let responseProducts = await instanceAxios.get(api);
       this.products = responseProducts.data.products;
+      this.productsDataRaw = responseProducts.data;
+
+      responseProducts.data.products.map((item) => {
+        let product = this.data.find((p) => p.id == item.id);
+        if (!product) {
+          this.data.push(item);
+        }
+      });
+
+      this.productsDataRaw.products = this.data;
+      console.log("this.data", this.data);
+
       this.rowsNumber = Math.ceil(
         responseProducts.data.total / this.rowsPerPage
       );
