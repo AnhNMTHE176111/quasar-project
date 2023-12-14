@@ -1,5 +1,26 @@
 <template>
   <div class="q-pa-md">
+    <q-tr v-for="n in 5" :key="n" v-show="loading">
+      <q-td class="text-left">
+        <q-skeleton animation="blink" type="text" width="85px" />
+      </q-td>
+      <q-td class="text-right">
+        <q-skeleton animation="blink" type="text" width="50px" />
+      </q-td>
+      <q-td class="text-right">
+        <q-skeleton animation="blink" type="text" width="35px" />
+      </q-td>
+      <q-td class="text-right">
+        <q-skeleton animation="blink" type="text" width="65px" />
+      </q-td>
+      <q-td class="text-right">
+        <q-skeleton animation="blink" type="text" width="25px" />
+      </q-td>
+      <q-td class="text-right">
+        <q-skeleton animation="blink" type="text" width="85px" />
+      </q-td>
+    </q-tr>
+
     <q-table
       title="Products"
       selection="multiple"
@@ -119,18 +140,11 @@
             {{ col.label }}
           </q-th>
         </q-tr>
-
-        <!-- <q-tr :key="props" class="text-center">
-          <q-td>
-            <q-checkbox v-model="selectedProduct" :val="item1" />
-          </q-td>
-          <q-td> Item 1 </q-td>
-        </q-tr> -->
       </template>
 
       <template v-slot:body="props">
-        <q-tr :key="props" class="text-center">
-          <q-td>
+        <q-tr :key="props" class="text-center" >
+          <q-td >
             <q-checkbox v-model="selectedProduct" :val="props.row.id" />
           </q-td>
           <q-td class="text-left">
@@ -209,6 +223,9 @@
               class="row"
               @update:model-value="
                 () => {
+                  resetCategory();
+                  filterFormReset();
+                  searchValue = '';
                   this.currentPage = 1;
                   hanldeChangeData(
                     `/products?limit=${this.rowsPerPage}&skip=${
@@ -274,12 +291,13 @@
 
 <script>
 import { useQuasar } from "quasar";
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import _ from "lodash";
 import ProductDialog from "../components/ProductDialog.vue";
 import ProductViewCard from "src/components/ProductViewCard.vue";
 import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
 import axios from "axios";
+import 'dotenv/config'
 
 // let a = [1 , 2, 3];
 // let b = [2, 5, 5];
@@ -287,8 +305,10 @@ import axios from "axios";
 // console.log(c);
 
 const instanceAxios = axios.create({
-  baseURL: "https://dummyjson.com",
+  baseURL: process.env.BASE_API,
 });
+
+console.log('baseURL', process.env.BASE_API);
 
 export default {
   components: {
@@ -315,7 +335,7 @@ export default {
     const currentUpdateProduct = ref([]);
     const categories = ref([]);
     const chooseCategory = ref(null);
-    const loading = ref(false);
+    const loading = ref(true);
 
     // pagination
     const currentPage = ref(1);
@@ -425,15 +445,20 @@ export default {
       pagination,
       selectedAll: ref(false),
       rowsPerPageOptions: ref([13, 5, 10, 15, 20]),
+      data: ref([]),
+      filter: ref({
+        search: searchValue,
+        category: chooseCategory,
+      }),
     };
   },
 
   methods: {
     async getData() {
+      console.log("this", this.loading);
       const responseCategories = await instanceAxios.get(
         "/products/categories"
       );
-
       this.categories = await responseCategories.data;
 
       this.hanldeChangeData(
@@ -467,7 +492,7 @@ export default {
       this.products.splice(index, 1);
       this.productsDataRaw.products.splice(index, 1);
       console.log("leng data", this.productsDataRaw.products.length);
-      console.log("leng sub", this.products.length);
+      // console.log("leng sub", this.products.length);
       this.confirmDelete = false;
       this.currentProductId = -1;
     },
@@ -657,14 +682,28 @@ export default {
     },
     handleSearchProduct() {
       clearTimeout(this.timeout);
-      if (this.oldSearchvalue != this.searchValue.trim()) {
+      if (
+        this.oldSearchvalue != this.searchValue.trim() &&
+        this.searchValue.trim().length > 0
+      ) {
         this.timeout = setTimeout(async () => {
           let value = this.searchValue.trim().split(/\s+/g).join(" ");
-          this.hanldeChangeData(`/products/search?q=${value}`);
+          this.hanldeChangeData(
+            `/products/search?q=${value}&limit=${this.rowsPerPage}&skip=${
+              this.rowsPerPage * (this.currentPage - 1)
+            }`
+          );
         }, 700);
       }
-      if (this.searchValue == "") {
-        this.hanldeChangeData();
+      if (
+        this.oldSearchvalue != this.searchValue.trim() &&
+        this.searchValue.trim().length == 0
+      ) {
+        this.hanldeChangeData(
+          `/products?limit=${this.rowsPerPage}&skip=${
+            this.rowsPerPage * (this.currentPage - 1)
+          }`
+        );
       }
       this.oldSearchvalue = this.searchValue.trim();
     },
@@ -680,46 +719,65 @@ export default {
         this.selectedProduct = [];
       }
     },
+    async hanldeChangePage(api) {
+      this.loading = true;
+
+      // case dont use api
+      let start = (this.currentPage - 1) * this.rowsPerPage;
+      let end = start + this.rowsPerPage;
+      console.log(start, end);
+      let checkdata = [];
+      for (let index = start; index < end; index++) {
+        const element = this.data.find((item) => item.id == index + 1);
+        if (element) {
+          checkdata.push(element);
+        }
+      }
+      console.log("checkdata", checkdata);
+      if (checkdata.length == this.rowsPerPage) {
+        this.products = checkdata;
+      } else {
+        // case use api
+        let responseProducts = await instanceAxios.get(api);
+        responseProducts.data.products.map((product) => {
+          let foundProduct = this.data.find((item) => item.id == product.id);
+          if (!foundProduct) {
+            this.data.push(product);
+          }
+        });
+        this.data.sort((a, b) => a.id - b.id);
+        console.log("data", this.data);
+        this.productsDataRaw = responseProducts.data;
+        this.products = responseProducts.data.products;
+        this.rowsNumber = Math.ceil(
+          responseProducts.data.total / this.rowsPerPage
+        );
+      }
+
+      this.loading = false;
+    },
+
     async hanldeChangeData(api) {
       this.loading = true;
-      let responseProducts = {};
+      setTimeout(async () => {
+        let responseProducts = await instanceAxios.get(api);
+        responseProducts.data.products.map((product) => {
+          let foundProduct = this.data.find((item) => item.id == product.id);
+          if (!foundProduct) {
+            this.data.push(product);
+          }
+        });
+        this.data.sort((a, b) => a.id - b.id);
+        this.productsDataRaw.total = responseProducts.data.total;
+        this.productsDataRaw.products = this.data;
 
-      // `/products?limit=${this.rowsPerPage}&skip=${
-      //                 this.rowsPerPage * (this.currentPage - 1)
-      //               }`
-
-      // case no need fetch api
-      let start = this.rowsPerPage * (this.currentPage - 1);
-      let end = start + this.rowsPerPage;
-      // for (let index = start; index < end; index++) {
-      //   if (this.productsDataRaw.products[index]) {
-      //     const element = this.productsDataRaw.products[index];
-      //     responseProducts.data.products.push(element);
-      //   }
-      // }
-      // if (responseProducts.data.products.length) {
-      if (this.productsDataRaw.products) {
-        console.log(start);
-        console.log(end);
-        let checkData = this.productsDataRaw.products.splice(start, end);
-        console.log('checkdata', checkData);
-      }
-      // case must fetch api
-      responseProducts = await instanceAxios.get(api);
-      let data = _.union(
-        responseProducts.data.products,
-        this.productsDataRaw.products
-      );
-      console.log('union data', data);
-      this.productsDataRaw = responseProducts.data;
-      this.productsDataRaw.products = [...data];
-      // }
-
-      this.products = responseProducts.data.products;
-      this.rowsNumber = Math.ceil(
-        responseProducts.data.total / this.rowsPerPage
-      );
-      this.loading = false;
+        this.products = responseProducts.data.products;
+        this.rowsNumber = Math.ceil(
+          responseProducts.data.total / this.rowsPerPage
+        );
+        this.loading = false;
+        console.log("that", this.loading);
+      }, 2000);
     },
   },
 };
