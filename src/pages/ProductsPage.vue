@@ -5,11 +5,27 @@
         <div class="col-2 row justify-start">
           <q-input
             v-model="searchValue"
-            @keyup="handleSearchProduct"
+            @keypress="
+              (event) => {
+                if (event.key == 'Enter') handleSearchProduct();
+              }
+            "
             label="Search"
           >
+            <!-- @keyup="handleSearchProduct" -->
             <template v-slot:append>
-              <q-icon name="search" />
+              <q-icon
+                name="cancel"
+                @click="() => searchValue = ''"
+                v-if="searchValue.length > 0"
+                color="red"
+                style="cursor: pointer"
+              />
+              <q-icon
+                name="search"
+                @click="handleSearchProduct"
+                style="cursor: pointer"
+              />
             </template>
           </q-input>
         </div>
@@ -144,14 +160,14 @@
     <q-table
       title="Products"
       selection="multiple"
-      :rows-per-page-options="rowsPerPageOptions"
+      v-model:selected="selectedProduct"
       :loading="loading"
       :columns="columns"
       :rows="products"
       :pagination="pagination"
       v-else
     >
-      <template v-slot:header="props">
+      <!-- <template v-slot:header="props">
         <q-tr :props="props">
           <q-th :auto-width="false">
             <q-checkbox
@@ -165,9 +181,37 @@
             {{ col.label }}
           </q-th>
         </q-tr>
+      </template> -->
+
+      <template v-slot:body-cell-action="props">
+        <q-td>
+          <div class="row justify-center q-gutter-md">
+            <q-btn
+              flat
+              dense
+              icon="visibility"
+              color="primary"
+              @click="showViewingProductDialog(props.row.id)"
+            />
+            <q-btn
+              flat
+              dense
+              icon="edit"
+              color="primary"
+              @click="showUpdateDialog(props.row.id)"
+            />
+            <q-btn
+              flat
+              dense
+              icon="delete"
+              color="negative"
+              @click="openConfirmDeleteDialog(props.row.id)"
+            />
+          </div>
+        </q-td>
       </template>
 
-      <template v-slot:body="props">
+      <!-- <template v-slot:body="props">
         <q-tr :key="props" class="text-center">
           <q-td>
             <q-checkbox v-model="selectedProduct" :val="props.row.id" />
@@ -214,7 +258,7 @@
             />
           </q-td>
         </q-tr>
-      </template>
+      </template> -->
 
       <template v-slot:bottom="">
         <div class="row justify-between col-12">
@@ -244,6 +288,7 @@
               :options="rowsPerPageOptions"
               v-model="rowsPerPage"
               dense
+              outlined
               options-dense
               class="row"
               @update:model-value="
@@ -322,19 +367,15 @@ import ProductDialog from "../components/ProductDialog.vue";
 import ProductViewCard from "src/components/ProductViewCard.vue";
 import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
 import axios from "axios";
-// import 'dotenv/config'
 
-// let a = [1 , 2, 3];
-// let b = [2, 5, 5];
-// let c = _.union(a, b)
-// console.log(c);
+const baseURL = import.meta.env.VITE_BASE_API;
+const PRODUCT_CATEGORIES_API = import.meta.env.VITE_PRODUCT_CATEGORIES_API;
 
 const instanceAxios = axios.create({
-  baseURL: "https://dummyjson.com",
-  // baseURL: process.env.BASE_API,
+  baseURL: baseURL,
 });
 
-console.log("baseURL", process.env.BASE_API);
+console.log("baseURL", import.meta.env.VITE_VUE_APP_BAS_API);
 
 export default {
   components: {
@@ -365,6 +406,11 @@ export default {
     const chooseCategory = ref(null);
     const loading = ref(true);
 
+    //filter op;tion
+    const priceFrom = ref(null);
+    const priceTo = ref(null);
+    const selectedRating = ref(null);
+
     // pagination
     const currentPage = ref(1);
     const rowsNumber = ref(0);
@@ -380,64 +426,59 @@ export default {
         label: "Title",
         field: "title",
         required: true,
-        sortable: true,
         align: "left",
-        style: "width: 300px",
+        style: "min-width: 300px",
       },
       {
         name: "brand",
         label: "Brand",
         field: "brand",
         required: true,
-        sortable: true,
         align: "left",
-        style: "width: 200px",
+        style: "min-width: 200px",
       },
       {
         name: "category",
         label: "Category",
         field: "category",
         required: true,
-        sortable: true,
         align: "left",
-        style: "width: 120px",
+        style: "min-width: 120px",
       },
       {
         name: "price",
         label: "Price",
         field: "price",
         required: true,
-        sortable: true,
-        align: "left",
+        align: "center",
+        format: (val, row) => val.toLocaleString("en-US"),
       },
       {
         name: "discountPercentage",
         label: "Discount",
         field: "discountPercentage",
         required: true,
-        sortable: true,
-        align: "left",
+        align: "center",
+        format: (val, row) => val.toFixed(1),
       },
       {
         name: "rating",
         label: "Rating",
         field: "rating",
         required: true,
-        sortable: true,
-        align: "left",
+        align: "center",
       },
       {
         name: "stock",
         label: "Stock",
         field: "stock",
         required: true,
-        sortable: true,
-        align: "left",
+        align: "center",
       },
       {
         name: "action",
         label: "Action",
-        align: "left",
+        align: "center",
       },
     ];
 
@@ -458,11 +499,10 @@ export default {
       showPricingDialog,
       chooseCategory,
       categories,
-      selectedRating: ref(null),
-      priceFrom: ref(null),
-      priceTo: ref(null),
+      selectedRating,
+      priceFrom,
+      priceTo,
       rating: [1, 2, 3, 4, 5],
-      filterOff: ref(false),
       validFilterPrice: ref(true),
       timeout: ref(null),
       oldSearchvalue: ref(""),
@@ -477,6 +517,9 @@ export default {
       filter: ref({
         search: searchValue,
         category: chooseCategory,
+        priceFrom: priceFrom,
+        priceTo: priceTo,
+        rating: selectedRating,
       }),
     };
   },
@@ -488,11 +531,11 @@ export default {
           this.rowsPerPage * (this.currentPage - 1)
         }`
       );
-      this.getAllCategories()
+      this.getAllCategories();
     },
     async getAllCategories() {
       const responseCategories = await instanceAxios.get(
-        "/products/categories"
+        PRODUCT_CATEGORIES_API
       );
       this.categories = await responseCategories.data;
     },
@@ -578,9 +621,10 @@ export default {
       }
     },
     async hanldBulkPricing(updatePrice, updateDiscount) {
-      let result = 0;
+      let result = [];
       await Promise.all(
-        this.selectedProduct.map(async (id) => {
+        this.selectedProduct.map(async (product) => {
+          const id = product.id;
           const response = await instanceAxios.put(`/products/${id}`, {
             price: parseInt(updatePrice),
             discountPercentage: parseInt(updateDiscount),
@@ -594,13 +638,14 @@ export default {
             const updateProduct = this.productsDataRaw.products.filter(
               (p) => p.id == id
             )[0];
-            Object.assign(updateProduct, response.data);
             currentResult.success = true;
+            Object.assign(updateProduct, response.data);
           }
           result.push(currentResult);
         })
       );
       this.showPricingDialog = false;
+
       const failItems = result.filter((item) => item.success == false);
       if (failItems.length == 0) {
         this.quasarNotify.notify({
@@ -785,12 +830,8 @@ export default {
 
       this.loading = false;
     },
-
     async hanldeChangeData(api) {
-      console.log("2.5", this.loading);
       this.loading = true;
-
-      console.log("3", this.loading);
       let responseProducts = await instanceAxios.get(api);
       responseProducts.data.products.map((product) => {
         let foundProduct = this.data.find((item) => item.id == product.id);
@@ -807,9 +848,9 @@ export default {
         responseProducts.data.total / this.rowsPerPage
       );
       this.loading = false;
-      console.log("4", this.loading);
-
-      console.log("5", this.loading);
+    },
+    show(a) {
+      console.log("a", a);
     },
   },
 };

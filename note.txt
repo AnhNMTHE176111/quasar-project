@@ -8,18 +8,17 @@ UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK =========================
-try catch => làm bé hơn, chỉ catch những service hay bên thứ 3
-Phía table: nếu cột dài ngắn kahsc nhau => đưa sang trái
-            nếu cột cố định hay chỉ vài chữ => center
-API => đưa ra cả 2 phía (server và url)
-đưa các đường dẫn, hay api cố định làm constant
-
-sidebar = user + category
+3. API => đưa ra cả 2 phía (server và url)
+4. try catch => làm bé hơn, chỉ catch những service hay bên thứ 3
 sort price by current page
 update hay add xong cho nhảy lên đầu, hoặc có cái gì để biết mới update
 
+đưa các đường dẫn, hay api cố định làm constant <ok/>
+Phía table: nếu cột dài ngắn kahsc nhau => đưa sang trái <ok>
+            nếu cột cố định hay chỉ vài chữ => center       <ok>
+sidebar = user + category <ok>
 thêm skeleton <ok>
-table lẹch <ok>
+table lẹch <ok></ok>
 pagination real <ok>
 có phần chọn rowsperpage (5, 10, 15,...) <ok>
 category => api <ok>
