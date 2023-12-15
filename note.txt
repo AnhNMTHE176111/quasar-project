@@ -13,12 +13,12 @@ Phía table: nếu cột dài ngắn kahsc nhau => đưa sang trái
             nếu cột cố định hay chỉ vài chữ => center
 API => đưa ra cả 2 phía (server và url)
 đưa các đường dẫn, hay api cố định làm constant
-thêm skeleton
 
 sidebar = user + category
 sort price by current page
 update hay add xong cho nhảy lên đầu, hoặc có cái gì để biết mới update
 
+thêm skeleton <ok>
 table lẹch <ok>
 pagination real <ok>
 có phần chọn rowsperpage (5, 10, 15,...) <ok>

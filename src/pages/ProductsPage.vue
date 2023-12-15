@@ -1,25 +1,145 @@
 <template>
   <div class="q-pa-md">
-    <q-tr v-for="n in 5" :key="n" v-show="loading">
-      <q-td class="text-left">
-        <q-skeleton animation="blink" type="text" width="85px" />
-      </q-td>
-      <q-td class="text-right">
-        <q-skeleton animation="blink" type="text" width="50px" />
-      </q-td>
-      <q-td class="text-right">
-        <q-skeleton animation="blink" type="text" width="35px" />
-      </q-td>
-      <q-td class="text-right">
-        <q-skeleton animation="blink" type="text" width="65px" />
-      </q-td>
-      <q-td class="text-right">
-        <q-skeleton animation="blink" type="text" width="25px" />
-      </q-td>
-      <q-td class="text-right">
-        <q-skeleton animation="blink" type="text" width="85px" />
-      </q-td>
-    </q-tr>
+    <div class="q-pa-md shadow-3 q-mb-md">
+      <div class="row justify-between">
+        <div class="col-2 row justify-start">
+          <q-input
+            v-model="searchValue"
+            @keyup="handleSearchProduct"
+            label="Search"
+          >
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </div>
+        <div class="col-7 row justify-center q-gutter-sm">
+          <div class="row">
+            <q-select
+              class="btn"
+              label="Category"
+              v-model="chooseCategory"
+              :options="categories"
+              @update:model-value="handleFilterByCategory"
+            >
+              <template v-slot:prepend>
+                <q-icon name="category" />
+              </template>
+            </q-select>
+            <q-btn
+              class="q-ma-md"
+              icon="restart_alt"
+              @click="resetCategory"
+              v-if="chooseCategory"
+            />
+          </div>
+          <div>
+            <form
+              action=""
+              class="row q-gutter-sm"
+              @reset.prevent="filterFormReset"
+              @submit.prevent="filterFormSubmit"
+            >
+              <q-input
+                v-model="priceFrom"
+                type="number"
+                class="col-2"
+                label="Price From"
+                error-message="Please type correct number"
+                :error="!validFilterPrice"
+              />
+              <q-input
+                v-model="priceTo"
+                type="number"
+                class="col-2"
+                label="Price To "
+                error-message="Please type correct number"
+                :error="!validFilterPrice"
+              />
+              <q-select v-model="selectedRating" :options="rating">
+                <template v-slot:prepend>
+                  <q-icon name="star" />
+                </template>
+              </q-select>
+              <div class="row">
+                <q-btn
+                  icon="tune"
+                  class="q-ma-md"
+                  color="primary"
+                  type="submit"
+                />
+                <q-btn
+                  icon="filter_list_off"
+                  class="q-ma-md"
+                  color="negative"
+                  type="reset"
+                  v-show="(priceFrom && priceFrom <= priceTo) || selectedRating"
+                />
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="col-3 row justify-end">
+          <q-btn
+            v-show="selectedProduct.length > 0"
+            color="primary"
+            icon="payment"
+            label="Bulk Pricing"
+            class="q-ma-md"
+            @click="ShowSth"
+          />
+          <q-btn class="q-ma-md" icon="add" @click="showCreateDialog" />
+        </div>
+      </div>
+    </div>
+
+    <q-markup-table v-if="loading">
+      <thead>
+        <tr>
+          <th class="text-left" style="width: 150px">
+            <q-skeleton animation="blink" type="text" />
+          </th>
+          <th class="text-right">
+            <q-skeleton animation="blink" type="text" />
+          </th>
+          <th class="text-right">
+            <q-skeleton animation="blink" type="text" />
+          </th>
+          <th class="text-right">
+            <q-skeleton animation="blink" type="text" />
+          </th>
+          <th class="text-right">
+            <q-skeleton animation="blink" type="text" />
+          </th>
+          <th class="text-right">
+            <q-skeleton animation="blink" type="text" />
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr v-for="n in 14" :key="n">
+          <td class="text-left">
+            <q-skeleton animation="blink" type="text" width="85px" />
+          </td>
+          <td class="text-right">
+            <q-skeleton animation="blink" type="text" width="50px" />
+          </td>
+          <td class="text-right">
+            <q-skeleton animation="blink" type="text" width="35px" />
+          </td>
+          <td class="text-right">
+            <q-skeleton animation="blink" type="text" width="65px" />
+          </td>
+          <td class="text-right">
+            <q-skeleton animation="blink" type="text" width="25px" />
+          </td>
+          <td class="text-right">
+            <q-skeleton animation="blink" type="text" width="85px" />
+          </td>
+        </tr>
+      </tbody>
+    </q-markup-table>
 
     <q-table
       title="Products"
@@ -29,103 +149,8 @@
       :columns="columns"
       :rows="products"
       :pagination="pagination"
+      v-else
     >
-      <template v-slot:top>
-        <div class="row justify-between col-12">
-          <div class="col-1 row justify-start">
-            <q-input
-              v-model="searchValue"
-              @keyup="handleSearchProduct"
-              label="Search"
-            >
-              <template v-slot:append>
-                <q-icon name="search" />
-              </template>
-            </q-input>
-          </div>
-          <div class="col-8 row q-gutter-xl">
-            <div class="row">
-              <q-select
-                class="btn"
-                label="Category"
-                v-model="chooseCategory"
-                :options="categories"
-                @update:model-value="handleFilterByCategory"
-              >
-                <template v-slot:prepend>
-                  <q-icon name="category" />
-                </template>
-              </q-select>
-              <q-btn
-                class="q-ma-md"
-                icon="restart_alt"
-                @click="resetCategory"
-                v-if="chooseCategory"
-              />
-            </div>
-            <!-- Code here -->
-            <div>
-              <form
-                action=""
-                class="row q-gutter-sm"
-                @reset.prevent="filterFormReset"
-                @submit.prevent="filterFormSubmit"
-              >
-                <q-input
-                  v-model="priceFrom"
-                  type="number"
-                  class="col-2"
-                  label="Price From"
-                  error-message="Please type correct number"
-                  :error="!validFilterPrice"
-                />
-                <q-input
-                  v-model="priceTo"
-                  type="number"
-                  class="col-2"
-                  label="Price To "
-                  error-message="Please type correct number"
-                  :error="!validFilterPrice"
-                />
-                <q-select v-model="selectedRating" :options="rating">
-                  <template v-slot:prepend>
-                    <q-icon name="star" />
-                  </template>
-                </q-select>
-                <div class="row">
-                  <q-btn
-                    icon="tune"
-                    class="q-ma-md"
-                    color="primary"
-                    type="submit"
-                  />
-                  <q-btn
-                    icon="filter_list_off"
-                    class="q-ma-md"
-                    color="negative"
-                    type="reset"
-                    v-show="
-                      (priceFrom && priceFrom <= priceTo) || selectedRating
-                    "
-                  />
-                </div>
-              </form>
-            </div>
-          </div>
-          <div class="col-3 row justify-end">
-            <q-btn
-              v-show="selectedProduct.length > 0"
-              color="primary"
-              icon="payment"
-              label="Bulk Pricing"
-              class="q-ma-md"
-              @click="ShowSth"
-            />
-            <q-btn class="q-ma-md" icon="add" @click="showCreateDialog" />
-          </div>
-        </div>
-      </template>
-
       <template v-slot:header="props">
         <q-tr :props="props">
           <q-th :auto-width="false">
@@ -143,8 +168,8 @@
       </template>
 
       <template v-slot:body="props">
-        <q-tr :key="props" class="text-center" >
-          <q-td >
+        <q-tr :key="props" class="text-center">
+          <q-td>
             <q-checkbox v-model="selectedProduct" :val="props.row.id" />
           </q-td>
           <q-td class="text-left">
@@ -193,7 +218,7 @@
 
       <template v-slot:bottom="">
         <div class="row justify-between col-12">
-          <div class="col-2 row justify-start">a</div>
+          <div class="col-2 row justify-start"></div>
           <div class="col-8 row justify-center">
             <q-pagination
               :max="rowsNumber"
@@ -297,7 +322,7 @@ import ProductDialog from "../components/ProductDialog.vue";
 import ProductViewCard from "src/components/ProductViewCard.vue";
 import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
 import axios from "axios";
-import 'dotenv/config'
+// import 'dotenv/config'
 
 // let a = [1 , 2, 3];
 // let b = [2, 5, 5];
@@ -305,10 +330,11 @@ import 'dotenv/config'
 // console.log(c);
 
 const instanceAxios = axios.create({
-  baseURL: process.env.BASE_API,
+  baseURL: "https://dummyjson.com",
+  // baseURL: process.env.BASE_API,
 });
 
-console.log('baseURL', process.env.BASE_API);
+console.log("baseURL", process.env.BASE_API);
 
 export default {
   components: {
@@ -316,9 +342,11 @@ export default {
     ProductViewCard,
     BulkPricingDialog,
   },
+
   mounted() {
     this.getData();
   },
+
   setup() {
     const selectedProduct = ref([]);
     const productsDataRaw = ref([]);
@@ -340,7 +368,7 @@ export default {
     // pagination
     const currentPage = ref(1);
     const rowsNumber = ref(0);
-    const rowsPerPage = ref(13);
+    const rowsPerPage = ref(10);
     const pagination = ref({
       page: currentPage.value,
       rowsPerPage: rowsPerPage.value,
@@ -444,7 +472,7 @@ export default {
       rowsNumber,
       pagination,
       selectedAll: ref(false),
-      rowsPerPageOptions: ref([13, 5, 10, 15, 20]),
+      rowsPerPageOptions: ref([5, 10, 15, 20]),
       data: ref([]),
       filter: ref({
         search: searchValue,
@@ -455,17 +483,18 @@ export default {
 
   methods: {
     async getData() {
-      console.log("this", this.loading);
-      const responseCategories = await instanceAxios.get(
-        "/products/categories"
-      );
-      this.categories = await responseCategories.data;
-
       this.hanldeChangeData(
         `/products?limit=${this.rowsPerPage}&skip=${
           this.rowsPerPage * (this.currentPage - 1)
         }`
       );
+      this.getAllCategories()
+    },
+    async getAllCategories() {
+      const responseCategories = await instanceAxios.get(
+        "/products/categories"
+      );
+      this.categories = await responseCategories.data;
     },
     getValueCell(field, row) {
       if (field == "isDeleted") {
@@ -758,26 +787,29 @@ export default {
     },
 
     async hanldeChangeData(api) {
+      console.log("2.5", this.loading);
       this.loading = true;
-      setTimeout(async () => {
-        let responseProducts = await instanceAxios.get(api);
-        responseProducts.data.products.map((product) => {
-          let foundProduct = this.data.find((item) => item.id == product.id);
-          if (!foundProduct) {
-            this.data.push(product);
-          }
-        });
-        this.data.sort((a, b) => a.id - b.id);
-        this.productsDataRaw.total = responseProducts.data.total;
-        this.productsDataRaw.products = this.data;
 
-        this.products = responseProducts.data.products;
-        this.rowsNumber = Math.ceil(
-          responseProducts.data.total / this.rowsPerPage
-        );
-        this.loading = false;
-        console.log("that", this.loading);
-      }, 2000);
+      console.log("3", this.loading);
+      let responseProducts = await instanceAxios.get(api);
+      responseProducts.data.products.map((product) => {
+        let foundProduct = this.data.find((item) => item.id == product.id);
+        if (!foundProduct) {
+          this.data.push(product);
+        }
+      });
+      this.data.sort((a, b) => a.id - b.id);
+      this.productsDataRaw.total = responseProducts.data.total;
+      this.productsDataRaw.products = this.data;
+
+      this.products = responseProducts.data.products;
+      this.rowsNumber = Math.ceil(
+        responseProducts.data.total / this.rowsPerPage
+      );
+      this.loading = false;
+      console.log("4", this.loading);
+
+      console.log("5", this.loading);
     },
   },
 };
