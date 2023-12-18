@@ -302,8 +302,6 @@ const instanceAxios = axios.create({
   baseURL: baseURL,
 });
 
-console.log("baseURL", import.meta.env.VITE_VUE_APP_BAS_API);
-
 export default {
   components: {
     ProductDialog,

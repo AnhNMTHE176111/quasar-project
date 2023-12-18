@@ -7,12 +7,38 @@ api: https://dummyjson.com/products
 UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
-================ TASK =========================
-3. API => đưa ra cả 2 phía (server và url)
-4. try catch => làm bé hơn, chỉ catch những service hay bên thứ 3
-sort price by current page
-update hay add xong cho nhảy lên đầu, hoặc có cái gì để biết mới update
+================ TASK CMS CART =========================
+table
+show dialog detail cart
+-> left: scroll list product
+-> right: total information
 
+
+==================================================================
+:abc -> v-bind:abc
+1. define prop for a component
+Ex: <HelloWorld msg="You did it!" />
+-> in helloword.vue
+<script setup>
+defineProps({
+  msg: {
+    type: String,
+    required: true
+  }
+})
+</script>
+
+
+
+popup1 => update product + create product
+popup2 => view product (card)
+
+
+================ TASK CMS PRODUCT (DONE) =========================
+3. API => đưa ra cả 2 phía (server và url) <ok>
+4. try catch => làm bé hơn, chỉ catch những service hay bên thứ 3 </ok>
+sort price by current page <ok>
+update hay add xong cho nhảy lên đầu, hoặc có cái gì để biết mới update </ok>
 đưa các đường dẫn, hay api cố định làm constant <ok/>
 Phía table: nếu cột dài ngắn kahsc nhau => đưa sang trái <ok>
             nếu cột cố định hay chỉ vài chữ => center       <ok>
@@ -37,22 +63,3 @@ input search sang trái<ok>
 button icon <ok>
 search by name <ok>
 thêm check box <ok>
-
-==================================================================
-:abc -> v-bind:abc
-1. define prop for a component
-Ex: <HelloWorld msg="You did it!" />
--> in helloword.vue
-<script setup>
-defineProps({
-  msg: {
-    type: String,
-    required: true
-  }
-})
-</script>
-
-
-
-popup1 => update product + create product
-popup2 => view product (card)
