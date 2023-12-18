@@ -52,7 +52,7 @@
                 (val) =>
                   (val !== null && val !== '') || 'Please type something',
                 (val) =>
-                  (val > 0 && val < 100) || 'Please type a correct price',
+                  (val > 0 && val < 100) || 'Please type a correct discount',
               ]"
             />
           </div>
@@ -64,7 +64,7 @@
                 (val) =>
                   (val !== null && val !== '') || 'Please type something',
                 (val) =>
-                  (val > 0 && val < 100) || 'Please type a correct price',
+                  (val > 0 && val < 6) || 'Rating must be a number from 1 to 5',
               ]"
             />
             <q-input

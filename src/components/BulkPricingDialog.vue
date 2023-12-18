@@ -10,7 +10,7 @@
       <q-card-section>
         <q-form
           @submit.prevent="
-            $emit('hanldBulkPricing', updatePrice, updateDiscount)
+            $emit('hanldeBulkPricing', updatePrice, updateDiscount)
           "
         >
           <div class="col">
@@ -60,7 +60,7 @@ export default {
   props: {
     showPricingDialog: Boolean,
   },
-  emits: ["hanldBulkPricing"],
+  emits: ["hanldeBulkPricing"],
   setup() {
     return {
       updatePrice: ref(),

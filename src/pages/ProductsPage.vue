@@ -15,10 +15,10 @@
             <!-- @keyup="handleSearchProduct" -->
             <template v-slot:append>
               <q-icon
-                name="cancel"
-                @click="() => searchValue = ''"
+                name="close"
+                @click="() => (searchValue = '')"
                 v-if="searchValue.length > 0"
-                color="red"
+                color="blue"
                 style="cursor: pointer"
               />
               <q-icon
@@ -36,18 +36,17 @@
               label="Category"
               v-model="chooseCategory"
               :options="categories"
-              @update:model-value="handleFilterByCategory"
             >
               <template v-slot:prepend>
                 <q-icon name="category" />
               </template>
             </q-select>
-            <q-btn
+            <!-- <q-btn
               class="q-ma-md"
               icon="restart_alt"
               @click="resetCategory"
               v-if="chooseCategory"
-            />
+            /> -->
           </div>
           <div>
             <form
@@ -89,7 +88,11 @@
                   class="q-ma-md"
                   color="negative"
                   type="reset"
-                  v-show="(priceFrom && priceFrom <= priceTo) || selectedRating"
+                  v-show="
+                    (priceFrom && priceFrom <= priceTo) ||
+                    selectedRating ||
+                    chooseCategory
+                  "
                 />
               </div>
             </form>
@@ -167,22 +170,6 @@
       :pagination="pagination"
       v-else
     >
-      <!-- <template v-slot:header="props">
-        <q-tr :props="props">
-          <q-th :auto-width="false">
-            <q-checkbox
-              v-model="selectedAll"
-              :true-value="true"
-              :false-value="false"
-              @update:model-value="selectedAllProducts"
-            />
-          </q-th>
-          <q-th v-for="col in props.cols" :key="col" :style="col.style">
-            {{ col.label }}
-          </q-th>
-        </q-tr>
-      </template> -->
-
       <template v-slot:body-cell-action="props">
         <q-td>
           <div class="row justify-center q-gutter-md">
@@ -211,55 +198,6 @@
         </q-td>
       </template>
 
-      <!-- <template v-slot:body="props">
-        <q-tr :key="props" class="text-center">
-          <q-td>
-            <q-checkbox v-model="selectedProduct" :val="props.row.id" />
-          </q-td>
-          <q-td class="text-left">
-            {{ props.row.title }}
-          </q-td>
-          <q-td class="text-left">
-            {{ props.row.brand }}
-          </q-td>
-          <q-td class="text-left">
-            {{ props.row.category }}
-          </q-td>
-          <q-td>
-            {{ props.row.price }}
-          </q-td>
-          <q-td>
-            {{ props.row.discountPercentage }}
-          </q-td>
-          <q-td>
-            {{ props.row.rating }}
-          </q-td>
-          <q-td>
-            {{ props.row.stock }}
-          </q-td>
-          <q-td>
-            <q-btn
-              flat
-              icon="visibility"
-              color="primary"
-              @click="showViewingProductDialog(props.row.id)"
-            />
-            <q-btn
-              flat
-              icon="edit"
-              color="primary"
-              @click="showUpdateDialog(props.row.id)"
-            />
-            <q-btn
-              flat
-              icon="delete"
-              color="negative"
-              @click="openConfirmDeleteDialog(props.row.id)"
-            />
-          </q-td>
-        </q-tr>
-      </template> -->
-
       <template v-slot:bottom="">
         <div class="row justify-between col-12">
           <div class="col-2 row justify-start"></div>
@@ -273,12 +211,8 @@
               active-color="primary"
               @update:model-value="
                 () => {
-                  selectedAll = false;
-                  hanldeChangeData(
-                    `/products?limit=${this.rowsPerPage}&skip=${
-                      this.rowsPerPage * (this.currentPage - 1)
-                    }`
-                  );
+                  // selectedAll = false;
+                  hanldeChangeData(convertToAPI());
                 }
               "
             />
@@ -293,15 +227,8 @@
               class="row"
               @update:model-value="
                 () => {
-                  resetCategory();
-                  filterFormReset();
-                  searchValue = '';
                   this.currentPage = 1;
-                  hanldeChangeData(
-                    `/products?limit=${this.rowsPerPage}&skip=${
-                      this.rowsPerPage * (this.currentPage - 1)
-                    }`
-                  );
+                  hanldeChangeData(convertToAPI());
                 }
               "
             >
@@ -355,7 +282,7 @@
   <BulkPricingDialog
     v-model="showPricingDialog"
     :showPricingDialog="showPricingDialog"
-    @hanldBulkPricing="hanldBulkPricing"
+    @hanldeBulkPricing="hanldeBulkPricing"
   />
 </template>
 
@@ -406,7 +333,7 @@ export default {
     const chooseCategory = ref(null);
     const loading = ref(true);
 
-    //filter op;tion
+    //filter option
     const priceFrom = ref(null);
     const priceTo = ref(null);
     const selectedRating = ref(null);
@@ -459,7 +386,11 @@ export default {
         field: "discountPercentage",
         required: true,
         align: "center",
-        format: (val, row) => val.toFixed(1),
+        format: (val, row) => {
+          if (val) {
+            return val.toFixed(1);
+          }
+        },
       },
       {
         name: "rating",
@@ -514,7 +445,7 @@ export default {
       selectedAll: ref(false),
       rowsPerPageOptions: ref([5, 10, 15, 20]),
       data: ref([]),
-      filter: ref({
+      filterOptions: ref({
         search: searchValue,
         category: chooseCategory,
         priceFrom: priceFrom,
@@ -526,11 +457,7 @@ export default {
 
   methods: {
     async getData() {
-      this.hanldeChangeData(
-        `/products?limit=${this.rowsPerPage}&skip=${
-          this.rowsPerPage * (this.currentPage - 1)
-        }`
-      );
+      this.hanldeChangeData(this.convertToAPI());
       this.getAllCategories();
     },
     async getAllCategories() {
@@ -554,26 +481,60 @@ export default {
       this.currentProductId = id;
     },
     async handleDeleteProduct() {
-      const response = await instanceAxios.delete(
-        `/products/${this.currentProductId}`
-      );
-      const deletedProduct = await response.data;
-      const index = this.productsDataRaw.products.findIndex(
-        (product) => product.id == deletedProduct.id
-      );
-      this.products.splice(index, 1);
-      this.productsDataRaw.products.splice(index, 1);
-      console.log("leng data", this.productsDataRaw.products.length);
-      // console.log("leng sub", this.products.length);
-      this.confirmDelete = false;
-      this.currentProductId = -1;
+      let response;
+
+      try {
+        response = await instanceAxios.delete(
+          `/products/${this.currentProductId}`
+        );
+      } catch (error) {
+        console.log(error);
+        this.quasarNotify.notify({
+          message: "Delete Server fail",
+          position: "top-right",
+          type: "negative",
+        });
+      }
+
+      if (response.status === 200) {
+        const deletedProduct = await response.data;
+        const index = this.products.findIndex(
+          (product) => product.id == deletedProduct.id
+        );
+        this.products.splice(index, 1);
+        this.confirmDelete = false;
+        this.currentProductId = -1;
+
+        this.quasarNotify.notify({
+          message: "Delete successfully",
+          position: "top-right",
+          type: "positive",
+        });
+      } else {
+        this.quasarNotify.notify({
+          message: "Delete fail",
+          position: "top-right",
+          type: "negative",
+        });
+      }
     },
     async hanldeCreateProduct(product) {
+      let response;
       try {
-        const response = await instanceAxios.post("/products/add", {
+        response = await instanceAxios.post("/products/add", {
           ...product,
         });
-        this.products.push(response.data);
+      } catch (error) {
+        console.log(error);
+        this.quasarNotify.notify({
+          message: `Server failed `,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+
+      if (response.status === 200) {
+        this.products.unshift(response.data);
         product = [];
         this.createProductDialog = false;
         this.quasarNotify.notify({
@@ -581,10 +542,9 @@ export default {
           position: "top-right",
           type: "positive",
         });
-      } catch (error) {
-        console.log(error);
+      } else {
         this.quasarNotify.notify({
-          message: "Create new product failed",
+          message: `Create failed `,
           position: "top-right",
           type: "negative",
         });
@@ -594,33 +554,40 @@ export default {
       const { id, ...updateObject } = product;
       updateObject.rating = parseFloat(updateObject.rating);
 
+      let response;
       try {
-        const response = await instanceAxios.put(`/products/${id}`, {
+        response = await instanceAxios.put(`/products/${id}`, {
           ...updateObject,
         });
-        if (response.status === 200) {
-          const updateProduct = this.productsDataRaw.products.filter(
-            (p) => p.id == id
-          )[0];
-          Object.assign(updateProduct, updateObject);
-          product = [];
-          this.createProductDialog = false;
-          this.quasarNotify.notify({
-            message: "Update successfully",
-            position: "top-right",
-            type: "positive",
-          });
-        }
       } catch (error) {
         console.log(error);
         this.quasarNotify.notify({
-          message: "Update failed",
+          message: `Update Server failed`,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+      if (response.status === 200) {
+        const updateProduct = this.products.filter((p) => p.id == id)[0];
+        Object.assign(updateProduct, updateObject);
+        product = [];
+        this.createProductDialog = false;
+        this.quasarNotify.notify({
+          message: "Update successfully",
+          position: "top-right",
+          type: "positive",
+        });
+      } else {
+        this.quasarNotify.notify({
+          message: `Update failed `,
           position: "top-right",
           type: "negative",
         });
       }
     },
-    async hanldBulkPricing(updatePrice, updateDiscount) {
+    async hanldeBulkPricing(updatePrice, updateDiscount) {
+      console.log("updatePrice", updatePrice);
+      console.log("updateDiscount", updateDiscount);
       let result = [];
       await Promise.all(
         this.selectedProduct.map(async (product) => {
@@ -635,11 +602,11 @@ export default {
           };
 
           if (response.status == 200) {
-            const updateProduct = this.productsDataRaw.products.filter(
-              (p) => p.id == id
-            )[0];
+            const updateProduct = this.products.filter((p) => p.id == id)[0];
             currentResult.success = true;
-            Object.assign(updateProduct, response.data);
+            product.price = parseInt(updatePrice);
+            product.discountPercentage = parseInt(updateDiscount);
+            Object.assign(updateProduct, product);
           }
           result.push(currentResult);
         })
@@ -669,17 +636,13 @@ export default {
       this.currentUpdateProduct = [];
     },
     showUpdateDialog(proID) {
-      const product = this.productsDataRaw.products.filter(
-        (p) => p.id == proID
-      )[0];
+      const product = this.products.filter((p) => p.id == proID)[0];
       this.typeOfDialog = "update";
       this.currentUpdateProduct = { ...product };
       this.createProductDialog = true;
     },
     showViewingProductDialog(proID) {
-      const product = this.productsDataRaw.products.filter(
-        (p) => p.id == proID
-      )[0];
+      const product = this.products.filter((p) => p.id == proID)[0];
       this.productViewing = { ...product };
       this.showViewProduct = true;
     },
@@ -697,13 +660,14 @@ export default {
       this.priceFrom = "";
       this.priceTo = "";
       this.selectedRating = null;
-      this.products = [...this.productsDataRaw.products];
+      this.resetCategory();
+      this.hanldeChangeData(this.convertToAPI());
     },
     filterFormSubmit() {
       if (
         parseInt(this.priceTo) <= parseInt(this.priceFrom) &&
         !isNaN(parseInt(this.priceFrom)) &&
-        !isNaN(parseInt(this.priceFrom))
+        !isNaN(parseInt(this.priceTo))
       ) {
         this.validFilterPrice = false;
       }
@@ -712,78 +676,22 @@ export default {
       if (
         parseInt(this.priceTo) >= parseInt(this.priceFrom) &&
         !isNaN(parseInt(this.priceFrom)) &&
-        !isNaN(parseInt(this.priceFrom))
+        !isNaN(parseInt(this.priceTo))
       ) {
+        this.validFilterPrice = true;
         filterPrice = true;
       }
 
-      console.log("this.validFilterPrice", this.validFilterPrice);
-      console.log("this.selectedRating", this.selectedRating);
-      let filteredData = this.productsDataRaw.products;
-
-      // case 1
-      if (filterPrice && this.selectedRating) {
-        console.log("case 1");
-        filteredData = this.productsDataRaw.products.filter(
-          (p) =>
-            p.price >= this.priceFrom &&
-            p.price <= this.priceTo &&
-            parseFloat(p.rating).toFixed() == this.selectedRating
-        );
+      if (filterPrice || this.chooseCategory) {
+        this.hanldeChangeData(this.convertToAPI());
       }
-
-      // case 2
-      if (filterPrice && this.selectedRating == null) {
-        console.log("case 2");
-        filteredData = this.productsDataRaw.products.filter(
-          (p) => p.price >= this.priceFrom && p.price <= this.priceTo
-        );
-      }
-
-      // case 3
-      if (!filterPrice && this.selectedRating) {
-        console.log("case 3", this.selectedRating);
-        this.productsDataRaw.products.map((p) =>
-          console.log(parseInt(p.rating))
-        );
-        filteredData = this.productsDataRaw.products.filter(
-          (p) => parseFloat(p.rating).toFixed() == this.selectedRating
-        );
-      }
-
-      console.log(filteredData);
-      this.products = [...filteredData];
     },
     handleSearchProduct() {
-      clearTimeout(this.timeout);
-      if (
-        this.oldSearchvalue != this.searchValue.trim() &&
-        this.searchValue.trim().length > 0
-      ) {
-        this.timeout = setTimeout(async () => {
-          let value = this.searchValue.trim().split(/\s+/g).join(" ");
-          this.hanldeChangeData(
-            `/products/search?q=${value}&limit=${this.rowsPerPage}&skip=${
-              this.rowsPerPage * (this.currentPage - 1)
-            }`
-          );
-        }, 700);
-      }
-      if (
-        this.oldSearchvalue != this.searchValue.trim() &&
-        this.searchValue.trim().length == 0
-      ) {
-        this.hanldeChangeData(
-          `/products?limit=${this.rowsPerPage}&skip=${
-            this.rowsPerPage * (this.currentPage - 1)
-          }`
-        );
-      }
-      this.oldSearchvalue = this.searchValue.trim();
+      this.searchValue = this.searchValue.trim().split(/\s+/g).join(" ");
+      this.hanldeChangeData(this.convertToAPI());
     },
     async handleFilterByCategory() {
-      console.log(this.chooseCategory);
-      this.hanldeChangeData(`/products/category/${this.chooseCategory}`);
+      this.hanldeChangeData(this.convertToAPI());
     },
     selectedAllProducts() {
       if (this.selectedAll) {
@@ -833,6 +741,8 @@ export default {
     async hanldeChangeData(api) {
       this.loading = true;
       let responseProducts = await instanceAxios.get(api);
+      this.$router.push(api);
+
       responseProducts.data.products.map((product) => {
         let foundProduct = this.data.find((item) => item.id == product.id);
         if (!foundProduct) {
@@ -851,6 +761,33 @@ export default {
     },
     show(a) {
       console.log("a", a);
+    },
+    convertToAPI() {
+      let searchText = "";
+      let categoryText = "";
+      let priceText = "";
+      let ratingtext = "";
+      let apiTextObjects = [];
+      if (this.filterOptions.search) {
+        searchText = `search=${this.filterOptions.search}`;
+        apiTextObjects.push(searchText);
+      }
+      if (this.filterOptions.category) {
+        categoryText = `cid=${this.filterOptions.category}`;
+        apiTextObjects.push(categoryText);
+      }
+      if (this.filterOptions.priceFrom || this.filterOptions.priceTo) {
+        priceText = `priceF=${this.priceFrom}&priceT=${this.priceTo}`;
+        apiTextObjects.push(priceText);
+      }
+      if (this.filterOptions.rating) {
+        ratingtext = `rating=${this.selectedRating}`;
+        apiTextObjects.push(ratingtext);
+      }
+      let apiText = `/products?${apiTextObjects.join("&")}&limit=${
+        this.rowsPerPage
+      }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
+      return apiText;
     },
   },
 };
