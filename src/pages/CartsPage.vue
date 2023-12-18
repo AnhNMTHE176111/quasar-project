@@ -1,6 +1,6 @@
 <template>
   <div class="q-pa-md">
-    <div class="q-pa-md"></div>
+    
 
     <q-markup-table v-if="loading">
       <thead>
@@ -143,6 +143,7 @@
   </q-dialog>
 
   <CartDetailDialog />
+  <AddNewCartDialog />
 </template>
 
 <script>
@@ -150,6 +151,7 @@ import { ref } from "vue";
 import CartDetailDialog from "src/components/CartDetailDialog.vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
+import AddNewCartDialog from "src/components/AddNewCartDialog.vue";
 
 const baseURL = import.meta.env.VITE_BASE_API;
 
@@ -161,6 +163,7 @@ export default {
   name: "CartsPage",
   components: {
     CartDetailDialog,
+    AddNewCartDialog,
   },
   setup() {
     const carts = ref([]);
@@ -303,9 +306,7 @@ export default {
       let response;
 
       try {
-        response = await instanceAxios.delete(
-          `/carts/${this.currentCartId}`
-        );
+        response = await instanceAxios.delete(`/carts/${this.currentCartId}`);
       } catch (error) {
         console.log(error);
         this.quasarNotify.notify({
@@ -317,9 +318,7 @@ export default {
 
       if (response.status === 200) {
         const deletedCart = await response.data;
-        const index = this.carts.findIndex(
-          (cart) => cart.id == deletedCart.id
-        );
+        const index = this.carts.findIndex((cart) => cart.id == deletedCart.id);
         this.carts.splice(index, 1);
         this.confirmDelete = false;
         this.currentCartId = -1;
