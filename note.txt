@@ -13,6 +13,21 @@ show dialog detail cart
 -> left: scroll list product
 -> right: total information
 
+"id": 39,
+      "title": "Women Sweaters Wool",
+      "price": 600,
+      "quantity": 2,
+      "total": 1200,             // price * quantity
+      "discountPercentage": 17.2,
+      "discountedPrice": 994,    // total * (100 - discountPercentage)%
+      "thumbnail": "https://i.dummyjson.com/data/products/39/thumbnail.jpg"
+  }
+],
+"total": 2328,           // #total
+"discountedTotal": 1941, // #discountedPrice
+"userId": 97,
+"totalProducts": 5, //
+"totalQuantity": 10 //
 
 ==================================================================
 :abc -> v-bind:abc

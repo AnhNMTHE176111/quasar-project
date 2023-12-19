@@ -525,7 +525,7 @@ export default {
       } catch (error) {
         console.log(error);
         this.quasarNotify.notify({
-          message: `Server failed `,
+          message: `Server failed`,
           position: "top-right",
           type: "negative",
         });

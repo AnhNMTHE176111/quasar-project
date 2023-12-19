@@ -1,12 +1,12 @@
 <template>
   <q-dialog :show="showPopup">
     <q-card style="width: 700px; max-width: 80vw" class="q-pa-sm">
-      <q-card-senction>
+      <q-card-section>
         <div class="text-h6" v-if="typeOfDialog == 'update'">
           Update Product {{ currentUpdateProduct.id }}
         </div>
         <div class="text-h6" v-else>Create Product</div>
-      </q-card-senction>
+      </q-card-section>
 
       <q-card-section class="q-pt-none">
         <q-form

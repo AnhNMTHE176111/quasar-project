@@ -1,6 +1,18 @@
 <template>
   <div class="q-pa-md">
-    
+    <div class="q-pa-md shadow-3 q-mb-md">
+      <div class="row justify-between">
+        <div class="col-2 row justify-start"></div>
+        <div class="col-7 row justify-center q-gutter-sm"></div>
+        <div class="col-3 row justify-end">
+          <q-btn
+            class="q-ma-md"
+            icon="add"
+            @click="() => (showCreateDialog = true)"
+          />
+        </div>
+      </div>
+    </div>
 
     <q-markup-table v-if="loading">
       <thead>
@@ -143,7 +155,11 @@
   </q-dialog>
 
   <CartDetailDialog />
-  <AddNewCartDialog />
+  <AddNewCartDialog
+    v-model="showCreateDialog"
+    :showPopup="showCreateDialog"
+    @createNewCart="handleCreateCart"
+  />
 </template>
 
 <script>
@@ -253,6 +269,7 @@ export default {
       confirmDelete,
       selectedMultipleCarts: ref([]),
       currentCartId: ref(-1),
+      showCreateDialog: ref(false),
     };
   },
   mounted() {
@@ -301,7 +318,6 @@ export default {
       this.confirmDelete = true;
       this.currentCartId = id;
     },
-    async handleCreateCart() {},
     async handleDeleteCart() {
       let response;
 
@@ -337,6 +353,36 @@ export default {
       }
     },
     async handleUpdateCart() {},
+    async handleCreateCart(cart) {
+      let response;
+      try {
+        response = await instanceAxios.post(`/carts/add`, { ...cart });
+      } catch (error) {
+        this.quasarNotify.notify({
+          message: `${error.response.data.message}`,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+
+      if (response.status === 200) {
+        this.showCreateDialog = false;
+        this.carts.unshift(response.data);
+        cart = [];
+        this.quasarNotify.notify({
+          message: "Create new cart successfully",
+          position: "top-right",
+          type: "positive",
+        });
+
+      } else {
+        this.quasarNotify.notify({
+          message: `Create failed `,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+    },
   },
 };
 </script>
