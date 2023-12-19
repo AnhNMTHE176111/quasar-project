@@ -2,9 +2,35 @@
   <div class="q-pa-md">
     <div class="q-pa-md shadow-3 q-mb-md">
       <div class="row justify-between">
-        <div class="col-2 row justify-start"></div>
-        <div class="col-7 row justify-center q-gutter-sm"></div>
-        <div class="col-3 row justify-end">
+        <div class="col-1 row justify-start">
+          <q-btn
+            class="q-ma-md"
+            icon="search"
+            @click="promptSearchCart = true"
+          />
+        </div>
+        <div class="col-7 row justify-center q-gutter-sm">
+          <div class="column">
+            <q-input dense label="Total From" />
+            <q-input dense label="Total From" />
+          </div>
+          <q-separator vertical />
+          <div class="column">
+            <q-input dense label="Total From" />
+            <q-input dense label="Total From" />
+          </div>
+          <q-separator vertical />
+          <div class="column">
+            <q-input dense label="Total From" />
+            <q-input dense label="Total From" />
+          </div>
+          <q-separator vertical />
+          <div class="column">
+            <q-input dense label="Total From" />
+            <q-input dense label="Total From" />
+          </div>
+        </div>
+        <div class="col-2 row justify-end">
           <q-btn
             class="q-ma-md"
             icon="add"
@@ -76,7 +102,13 @@
         <q-td>
           <div class="row justify-center q-gutter-md">
             <q-btn flat dense icon="visibility" color="primary" />
-            <q-btn flat dense icon="edit" color="primary" />
+            <q-btn
+              flat
+              dense
+              icon="edit"
+              color="primary"
+              @click="handleShowUpdateDialog(props.row)"
+            />
             <q-btn
               flat
               dense
@@ -154,11 +186,45 @@
     </q-card>
   </q-dialog>
 
+  <q-dialog v-model="promptSearchCart" persistent>
+    <q-card style="min-width: 350px">
+      <q-card-section>
+        <div class="text-h6">Get carts of a user:</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        <q-input
+          dense
+          v-model.number="searchCart"
+          autofocus
+          type="number"
+          @keyup.enter="promptSearchCart = false"
+          :rules="[
+            (val) => (val >= 1 && val <= 100) || 'ID: 1-100',
+            (val) => parseInt(val) == val || 'Integer number',
+          ]"
+        />
+      </q-card-section>
+
+      <q-card-actions align="right" class="text-primary">
+        <q-btn flat label="Cancel" @click="searchCart = 0" v-close-popup />
+        <q-btn flat label="Search" @click="handleSearchCart" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
   <CartDetailDialog />
   <AddNewCartDialog
     v-model="showCreateDialog"
     :showPopup="showCreateDialog"
     @createNewCart="handleCreateCart"
+  />
+
+  <UpdateCartDialog
+    v-model="showUpdateDialog"
+    :showPopup="showUpdateDialog"
+    :currentUpdateCart="currentUpdateCart"
+    @updateCart="handleUpdateCart"
   />
 </template>
 
@@ -168,6 +234,7 @@ import CartDetailDialog from "src/components/CartDetailDialog.vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
 import AddNewCartDialog from "src/components/AddNewCartDialog.vue";
+import UpdateCartDialog from "src/components/UpdateCartDialog.vue";
 
 const baseURL = import.meta.env.VITE_BASE_API;
 
@@ -180,6 +247,7 @@ export default {
   components: {
     CartDetailDialog,
     AddNewCartDialog,
+    UpdateCartDialog,
   },
   setup() {
     const carts = ref([]);
@@ -236,19 +304,20 @@ export default {
         align: "center",
       },
       {
-        name: "discountedTotal",
-        label: "Discounted Total",
-        field: "discountedTotal",
-        align: "center",
-        format: (val, row) => val.toLocaleString("en-US"),
-      },
-      {
         name: "total",
         label: "Total",
         field: "total",
         align: "center",
         format: (val, row) => val.toLocaleString("en-US"),
       },
+      {
+        name: "discountedTotal",
+        label: "Discounted Total",
+        field: "discountedTotal",
+        align: "center",
+        format: (val, row) => val.toLocaleString("en-US"),
+      },
+
       {
         name: "action",
         label: "Action",
@@ -270,6 +339,10 @@ export default {
       selectedMultipleCarts: ref([]),
       currentCartId: ref(-1),
       showCreateDialog: ref(false),
+      promptSearchCart: ref(false),
+      searchCart: ref(0),
+      showUpdateDialog: ref(false),
+      currentUpdateCart: ref([]),
     };
   },
   mounted() {
@@ -352,7 +425,36 @@ export default {
         });
       }
     },
-    async handleUpdateCart() {},
+    async handleUpdateCart(cart) {
+      console.log(cart.id);
+      let response;
+      try {
+        response = await instanceAxios.put(`carts/${cart.id}`, { ...cart });
+      } catch (error) {
+        this.quasarNotify.notify({
+          message: `${error.response.data.message}`,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+
+      if (response.status === 200) {
+        this.showCreateDialog = false;
+        this.carts.unshift(response.data);
+        cart = [];
+        this.quasarNotify.notify({
+          message: "Update cart successfully",
+          position: "top-right",
+          type: "positive",
+        });
+      } else {
+        this.quasarNotify.notify({
+          message: `Update failed `,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+    },
     async handleCreateCart(cart) {
       let response;
       try {
@@ -374,7 +476,6 @@ export default {
           position: "top-right",
           type: "positive",
         });
-
       } else {
         this.quasarNotify.notify({
           message: `Create failed `,
@@ -382,6 +483,20 @@ export default {
           type: "negative",
         });
       }
+    },
+    async handleSearchCart() {
+      let response;
+      try {
+        response = await instanceAxios.get(`/carts/user/${this.searchCart}`);
+      } catch (error) {
+        console.log(error);
+      }
+      if (response.status === 200) {
+      }
+    },
+    handleShowUpdateDialog(cart) {
+      this.currentUpdateCart = cart;
+      this.showUpdateDialog = true;
     },
   },
 };

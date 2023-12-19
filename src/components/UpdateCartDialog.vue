@@ -2,7 +2,7 @@
   <q-dialog :show="showPopup">
     <q-card style="width: 800px; max-width: 80vw" class="q-pa-sm">
       <q-card-section>
-        <div class="text-h6">Add New Cart</div>
+        <div class="text-h6">Update Cart</div>
       </q-card-section>
       <q-card-section class="row q-gutter-sm">
         <div class="col-3">
@@ -11,6 +11,7 @@
             v-model.number="userId"
             label="User ID"
             dense
+            readonly
             outlined
             :rules="[
               (val) => (val !== null && val !== '') || 'Required',
@@ -141,11 +142,11 @@
             <q-btn
               color="primary"
               icon="check"
-              label="Create"
+              label="Update"
               class="q-ma-sm"
               @click="
                 () => {
-                  $emit('createNewCart', cart);
+                  $emit('updateCart', cart);
                 }
               "
             />
@@ -166,10 +167,11 @@ const instanceAxios = axios.create({
 });
 
 export default {
-  name: "AddNewCartDialog",
-  emits: ["createNewCart"],
+  name: "UpdateCartDialog",
+  emits: ["updateCart"],
   props: {
     showPopup: Boolean,
+    currentUpdateCart: Object,
   },
   setup() {
     const selectedProducts = ref([]);
@@ -262,12 +264,17 @@ export default {
     },
   },
   watch: {
-    showPopup(newVal, oldVal) {
+    showPopupA(newVal, oldVal) {
       if (!newVal) {
         setTimeout(() => {
           this.cancelDialog();
         }, 200);
       }
+    },
+    currentUpdateCart(newVal, oldVal) {
+      this.selectedProducts = newVal.products;
+      this.userId = newVal.userId;
+      this.updateTotal();
     },
   },
 };
