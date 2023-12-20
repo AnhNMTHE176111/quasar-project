@@ -64,7 +64,12 @@
 
         <div class="col-5">
           <div class="text-subtitle1">List Selected Products</div>
-          <q-list bordered separator>
+          <q-list
+            bordered
+            separator
+            class="rounded-borders scroll"
+            style="max-height: 50vh"
+          >
             <q-item v-if="selectedProducts.length <= 0">
               <q-item-section> Please choose item </q-item-section>
             </q-item>
@@ -146,8 +151,8 @@
               class="q-ma-sm"
               @click="
                 () => {
-                  productsShowing = []
-                  searchValue = ''
+                  productsShowing = [];
+                  searchValue = '';
                   $emit('updateCart', cart);
                 }
               "

@@ -133,7 +133,13 @@
       <template v-slot:body-cell-action="props">
         <q-td>
           <div class="row justify-center q-gutter-md">
-            <q-btn flat dense icon="visibility" color="primary" />
+            <q-btn
+              flat
+              dense
+              icon="visibility"
+              color="primary"
+              @click="handleShowDetailDialog(props.row)"
+            />
             <q-btn
               flat
               dense
@@ -220,28 +226,35 @@
 
   <q-dialog v-model="promptSearchCart" persistent>
     <q-card style="min-width: 350px">
-      <q-card-section>
-        <div class="text-h6">Get carts of a user:</div>
-      </q-card-section>
+      <form action="" @submit.prevent="handleSearchCart">
+        <q-card-section>
+          <div class="text-h6">Get carts of a user:</div>
+        </q-card-section>
 
-      <q-card-section class="q-pt-none">
-        <q-input
-          dense
-          v-model.number="searchCart"
-          autofocus
-          type="number"
-          @keyup.enter="promptSearchCart = false"
-          :rules="[
-            (val) => (val >= 1 && val <= 100) || 'ID: 1-100',
-            (val) => parseInt(val) == val || 'Integer number',
-          ]"
-        />
-      </q-card-section>
+        <q-card-section class="q-pt-none">
+          <q-input
+            dense
+            v-model.number="searchCart"
+            autofocus
+            type="number"
+            @keyup.enter="promptSearchCart = false"
+            :rules="[
+              (val) => (val >= 1 && val <= 100) || 'ID: 1-100',
+              (val) => parseInt(val) == val || 'Integer number',
+            ]"
+          />
+        </q-card-section>
 
-      <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="Cancel" @click="searchCart = 0" v-close-popup />
-        <q-btn flat label="Search" @click="handleSearchCart" v-close-popup />
-      </q-card-actions>
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancel" @click="searchCart = 0" v-close-popup />
+          <q-btn
+            flat
+            label="Search"
+            type="submit"
+            v-close-popup
+          />
+        </q-card-actions>
+      </form>
     </q-card>
   </q-dialog>
 
@@ -257,6 +270,13 @@
     :showPopup="showUpdateDialog"
     :currentUpdateCart="currentUpdateCart"
     @updateCart="handleUpdateCart"
+  />
+
+  <CartDetailDialog
+    v-model="showDetailDialog"
+    :showPopup="showDetailDialog"
+    :currentDetailCart="currentDetailCart"
+    @showUpdateDialog="handleShowUpdateDialog(currentDetailCart)"
   />
 </template>
 
@@ -380,9 +400,10 @@ export default {
       selectedMultipleCarts: ref([]),
       currentCartId: ref(-1),
       showCreateDialog: ref(false),
+      showUpdateDialog: ref(false),
+      showDetailDialog: ref(false),
       promptSearchCart: ref(false),
       searchCart: ref(0),
-      showUpdateDialog: ref(false),
       currentUpdateCart: ref([]),
       totalFilter,
       discountedTotalFilter,
@@ -390,6 +411,7 @@ export default {
       rangeDiscountedTotalFilter,
       rangeTotal,
       rangeTotalQuantityFilter,
+      currentDetailCart: ref([]),
     };
   },
   mounted() {
@@ -452,7 +474,7 @@ export default {
         totalQuantityFilterText = `quantityTotalF=${this.totalQuantityFilter.min}&quantityTotalT=${this.totalQuantityFilter.max}`;
         apiTextObjects.push(totalQuantityFilterText);
       }
-      let apiText = `/carts?${apiTextObjects.join("&")}limit=${
+      let apiText = `/carts?${apiTextObjects.join("&")}&limit=${
         this.rowsPerPage
       }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
       return apiText;
@@ -560,14 +582,32 @@ export default {
       try {
         response = await instanceAxios.get(`/carts/user/${this.searchCart}`);
       } catch (error) {
-        console.log(error);
+        this.quasarNotify.notify({
+          message: `${error.response.data.message}`,
+          position: "top-right",
+          type: "negative",
+        });
       }
       if (response.status === 200) {
+        this.searchCart = 0;
+        if (response.data.carts.length > 0) {
+          this.handleShowDetailDialog(response.data.carts[0]);
+        } else {
+          this.quasarNotify.notify({
+            message: `User does not have any cart `,
+            position: "top-right",
+            type: "negative",
+          });
+        }
       }
     },
     handleShowUpdateDialog(cart) {
       this.currentUpdateCart = cart;
       this.showUpdateDialog = true;
+    },
+    handleShowDetailDialog(cart) {
+      this.currentDetailCart = cart;
+      this.showDetailDialog = true;
     },
     hanldeFilter() {
       this.getData(this.convertToAPI());
