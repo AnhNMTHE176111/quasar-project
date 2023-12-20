@@ -146,6 +146,8 @@
               class="q-ma-sm"
               @click="
                 () => {
+                  productsShowing = []
+                  searchValue = ''
                   $emit('updateCart', cart);
                 }
               "

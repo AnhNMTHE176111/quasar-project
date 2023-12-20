@@ -452,9 +452,9 @@ export default {
         totalQuantityFilterText = `quantityTotalF=${this.totalQuantityFilter.min}&quantityTotalT=${this.totalQuantityFilter.max}`;
         apiTextObjects.push(totalQuantityFilterText);
       }
-      let apiText = `/carts?${apiTextObjects.join("&")}limit=${this.rowsPerPage}&skip=${
-        this.rowsPerPage * (this.currentPage - 1)
-      }`;
+      let apiText = `/carts?${apiTextObjects.join("&")}limit=${
+        this.rowsPerPage
+      }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
       return apiText;
     },
     openConfirmDeleteDialog(id) {
@@ -496,10 +496,10 @@ export default {
       }
     },
     async handleUpdateCart(cart) {
-      console.log(cart.id);
+      let id = this.currentUpdateCart.id;
       let response;
       try {
-        response = await instanceAxios.put(`carts/${cart.id}`, { ...cart });
+        response = await instanceAxios.put(`carts/${id}`, { ...cart });
       } catch (error) {
         this.quasarNotify.notify({
           message: `${error.response.data.message}`,
@@ -509,8 +509,9 @@ export default {
       }
 
       if (response.status === 200) {
-        this.showCreateDialog = false;
-        this.carts.unshift(response.data);
+        this.showUpdateDialog = false;
+        const updateCart = this.carts.filter((c) => c.id == id)[0];
+        Object.assign(updateCart, response.data);
         cart = [];
         this.quasarNotify.notify({
           message: "Update cart successfully",
@@ -569,7 +570,6 @@ export default {
       this.showUpdateDialog = true;
     },
     hanldeFilter() {
-
       this.getData(this.convertToAPI());
     },
   },
