@@ -8,6 +8,13 @@ UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK CMS CART =========================
+review1:
+-> chia folder
+function nen ngắn, ko nên có else
+const, let chia rõ ràng hơn
+edit = view + edit
+
+
 table
 show dialog detail cart
 -> left: scroll list product
