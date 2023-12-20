@@ -3,39 +3,71 @@
     <div class="q-pa-md shadow-3 q-mb-md">
       <div class="row justify-between">
         <div class="col-1 row justify-start">
-          <q-btn
-            class="q-ma-md"
-            icon="search"
-            @click="promptSearchCart = true"
-          />
+          <div>
+            <q-btn
+              class="q-ma-md"
+              icon="search"
+              color="blue"
+              @click="promptSearchCart = true"
+            />
+          </div>
         </div>
-        <div class="col-7 row justify-center q-gutter-sm">
-          <div class="column">
-            <q-input dense label="Total From" />
-            <q-input dense label="Total From" />
-          </div>
-          <q-separator vertical />
-          <div class="column">
-            <q-input dense label="Total From" />
-            <q-input dense label="Total From" />
-          </div>
-          <q-separator vertical />
-          <div class="column">
-            <q-input dense label="Total From" />
-            <q-input dense label="Total From" />
-          </div>
-          <q-separator vertical />
-          <div class="column">
-            <q-input dense label="Total From" />
-            <q-input dense label="Total From" />
-          </div>
+        <div class="col-7 justify-center">
+          <form @submit.prevent="hanldeFilter" class="col-12">
+            <div class="q-pa-md">
+              <q-list dense>
+                <q-item>
+                  <q-item-section class="col-2">Total:</q-item-section>
+                  <q-item-section>
+                    <q-range
+                      label
+                      color="green"
+                      v-model="totalFilter"
+                      :min="0"
+                      :max="5000"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item>
+                  <q-item-section class="col-2">Discount Total</q-item-section>
+                  <q-item-section>
+                    <q-range
+                      label
+                      color="orange"
+                      v-model="discountedTotalFilter"
+                      :min="0"
+                      :max="5000"
+                    />
+                  </q-item-section>
+                </q-item>
+                <q-item>
+                  <q-item-section class="col-2">Quantity</q-item-section>
+                  <q-item-section>
+                    <q-range
+                      label
+                      color="purple"
+                      v-model="totalQuantityFilter"
+                      :min="0"
+                      :max="100"
+                    />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <div class="col-12 row justify-end">
+                <q-btn type="submit"> Submit </q-btn>
+              </div>
+            </div>
+          </form>
         </div>
         <div class="col-2 row justify-end">
-          <q-btn
-            class="q-ma-md"
-            icon="add"
-            @click="() => (showCreateDialog = true)"
-          />
+          <div>
+            <q-btn
+              class="q-ma-md"
+              icon="add"
+              color="blue"
+              @click="() => (showCreateDialog = true)"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -259,14 +291,23 @@ export default {
     const rowsPerPageOptions = ref([5, 10, 15, 20]);
 
     // filter
-    const totalFrom = ref(null);
-    const totalTo = ref(null);
-    const discountedTotalFrom = ref(null);
-    const discountedTotalto = ref(null);
-    const totalProductsFrom = ref(null);
-    const totalProductsTo = ref(null);
-    const totalQuantityFrom = ref(null);
-    const totalQuantityTo = ref(null);
+    const totalFilter = ref({
+      min: 0,
+      max: 5000,
+    });
+    const rangeTotal = totalFilter.value.max - totalFilter.value.min;
+    const discountedTotalFilter = ref({
+      min: 0,
+      max: 5000,
+    });
+    const rangeDiscountedTotalFilter =
+      discountedTotalFilter.value.max - discountedTotalFilter.value.min;
+    const totalQuantityFilter = ref({
+      min: 0,
+      max: 100,
+    });
+    const rangeTotalQuantityFilter =
+      totalQuantityFilter.value.max - totalQuantityFilter.value.min;
 
     // pagination
     const currentPage = ref(1);
@@ -343,6 +384,12 @@ export default {
       searchCart: ref(0),
       showUpdateDialog: ref(false),
       currentUpdateCart: ref([]),
+      totalFilter,
+      discountedTotalFilter,
+      totalQuantityFilter,
+      rangeDiscountedTotalFilter,
+      rangeTotal,
+      rangeTotalQuantityFilter,
     };
   },
   mounted() {
@@ -351,6 +398,7 @@ export default {
   methods: {
     async getData(api) {
       this.loading = true;
+      this.$router.push(api);
       let response;
       try {
         response = await instanceAxios.get(api);
@@ -382,7 +430,29 @@ export default {
       this.loading = false;
     },
     convertToAPI() {
-      let apiText = `/carts?limit=${this.rowsPerPage}&skip=${
+      let totalFilterText = "";
+      let discountedTotalFilterText = "";
+      let totalQuantityFilterText = "";
+      let apiTextObjects = [];
+      if (this.rangeTotal != this.totalFilter.max - this.totalFilter.min) {
+        totalFilterText = `totalF=${this.totalFilter.min}&totalT=${this.totalFilter.max}`;
+        apiTextObjects.push(totalFilterText);
+      }
+      if (
+        this.rangeDiscountedTotalFilter !=
+        this.discountedTotalFilter.max - this.discountedTotalFilter.min
+      ) {
+        discountedTotalFilterText = `discountTotalF=${this.discountedTotalFilter.min}&discountTotalT=${this.discountedTotalFilter.max}`;
+        apiTextObjects.push(discountedTotalFilterText);
+      }
+      if (
+        this.rangeTotalQuantityFilter !=
+        this.totalQuantityFilter.max - this.totalQuantityFilter.min
+      ) {
+        totalQuantityFilterText = `quantityTotalF=${this.totalQuantityFilter.min}&quantityTotalT=${this.totalQuantityFilter.max}`;
+        apiTextObjects.push(totalQuantityFilterText);
+      }
+      let apiText = `/carts?${apiTextObjects.join("&")}limit=${this.rowsPerPage}&skip=${
         this.rowsPerPage * (this.currentPage - 1)
       }`;
       return apiText;
@@ -497,6 +567,10 @@ export default {
     handleShowUpdateDialog(cart) {
       this.currentUpdateCart = cart;
       this.showUpdateDialog = true;
+    },
+    hanldeFilter() {
+
+      this.getData(this.convertToAPI());
     },
   },
 };
