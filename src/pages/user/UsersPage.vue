@@ -5,26 +5,17 @@
     <q-table> </q-table>
   </div>
 
-  <CartDetailDialog/>
 </template>
 
 <script>
 import { ref } from "vue";
-import CartDetailDialog from "src/components/CartDetailDialog.vue";
 
 export default {
-  name: 'CartsPage',
-  components: {
-    CartDetailDialog
-  },
+  name: "UserPage",
+  components: {},
   setup() {
-
-    return {
-
-    }
+    return {};
   },
-  methods: {
-
-  },
-}
+  methods: {},
+};
 </script>

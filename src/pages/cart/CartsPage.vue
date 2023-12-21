@@ -247,12 +247,7 @@
 
         <q-card-actions align="right" class="text-primary">
           <q-btn flat label="Cancel" @click="searchCart = 0" v-close-popup />
-          <q-btn
-            flat
-            label="Search"
-            type="submit"
-            v-close-popup
-          />
+          <q-btn flat label="Search" type="submit" v-close-popup />
         </q-card-actions>
       </form>
     </q-card>
@@ -282,11 +277,11 @@
 
 <script>
 import { ref } from "vue";
-import CartDetailDialog from "src/components/CartDetailDialog.vue";
 import axios from "axios";
 import { useQuasar } from "quasar";
-import AddNewCartDialog from "src/components/AddNewCartDialog.vue";
-import UpdateCartDialog from "src/components/UpdateCartDialog.vue";
+import AddNewCartDialog from "./components/AddNewCartDialog.vue";
+import UpdateCartDialog from "./components/UpdateCartDialog.vue";
+import CartDetailDialog from "./components/CartDetailDialog.vue";
 
 const baseURL = import.meta.env.VITE_BASE_API;
 
@@ -300,6 +295,7 @@ export default {
     CartDetailDialog,
     AddNewCartDialog,
     UpdateCartDialog,
+    CartDetailDialog,
   },
   setup() {
     const carts = ref([]);
@@ -452,29 +448,31 @@ export default {
       this.loading = false;
     },
     convertToAPI() {
-      let totalFilterText = "";
-      let discountedTotalFilterText = "";
-      let totalQuantityFilterText = "";
-      let apiTextObjects = [];
-      if (this.rangeTotal != this.totalFilter.max - this.totalFilter.min) {
-        totalFilterText = `totalF=${this.totalFilter.min}&totalT=${this.totalFilter.max}`;
-        apiTextObjects.push(totalFilterText);
-      }
-      if (
-        this.rangeDiscountedTotalFilter !=
-        this.discountedTotalFilter.max - this.discountedTotalFilter.min
-      ) {
-        discountedTotalFilterText = `discountTotalF=${this.discountedTotalFilter.min}&discountTotalT=${this.discountedTotalFilter.max}`;
-        apiTextObjects.push(discountedTotalFilterText);
-      }
-      if (
-        this.rangeTotalQuantityFilter !=
-        this.totalQuantityFilter.max - this.totalQuantityFilter.min
-      ) {
-        totalQuantityFilterText = `quantityTotalF=${this.totalQuantityFilter.min}&quantityTotalT=${this.totalQuantityFilter.max}`;
-        apiTextObjects.push(totalQuantityFilterText);
-      }
-      let apiText = `/carts?${apiTextObjects.join("&")}&limit=${
+      const filter = [
+        {
+          name: "total",
+          filter: this.totalFilter,
+          range: this.rangeTotal,
+        },
+        {
+          name: "discountedTotal",
+          filter: this.discountedTotalFilter,
+          range: this.rangeDiscountedTotalFilter,
+        },
+        {
+          name: "totalQuantity",
+          filter: this.totalQuantityFilter,
+          range: this.rangeTotalQuantityFilter,
+        },
+      ];
+
+      const apiTextObjects = filter
+        .filter((item) => item.range != item.filter.max - item.filter.min)
+        .map(
+          (item) =>
+            `${item.name}From=${item.filter.min}&${item.name}To=${item.filter.max}`
+        );
+      const apiText = `/carts?${apiTextObjects.join("&")}&limit=${
         this.rowsPerPage
       }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
       return apiText;
@@ -518,7 +516,7 @@ export default {
       }
     },
     async handleUpdateCart(cart) {
-      let id = this.currentUpdateCart.id;
+      const id = this.currentUpdateCart.id;
       let response;
       try {
         response = await instanceAxios.put(`carts/${id}`, { ...cart });

@@ -289,11 +289,10 @@
 <script>
 import { useQuasar } from "quasar";
 import { ref } from "vue";
-import _ from "lodash";
-import ProductDialog from "../components/ProductDialog.vue";
-import ProductViewCard from "src/components/ProductViewCard.vue";
-import BulkPricingDialog from "src/components/BulkPricingDialog.vue";
 import axios from "axios";
+import ProductViewCard from "./components/ProductViewCard.vue";
+import ProductDialog from "./components/ProductDialog.vue";
+import BulkPricingDialog from "./components/BulkPricingDialog.vue";
 
 const baseURL = import.meta.env.VITE_BASE_API;
 const PRODUCT_CATEGORIES_API = import.meta.env.VITE_PRODUCT_CATEGORIES_API;
@@ -307,7 +306,11 @@ export default {
     ProductDialog,
     ProductViewCard,
     BulkPricingDialog,
-  },
+    BulkPricingDialog,
+    BulkPricingDialog,
+    ProductViewCard,
+    ProductDialog
+},
 
   mounted() {
     this.getData();
