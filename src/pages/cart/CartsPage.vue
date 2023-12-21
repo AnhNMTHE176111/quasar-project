@@ -133,13 +133,7 @@
       <template v-slot:body-cell-action="props">
         <q-td>
           <div class="row justify-center q-gutter-md">
-            <q-btn
-              flat
-              dense
-              icon="visibility"
-              color="primary"
-              @click="handleShowDetailDialog(props.row)"
-            />
+            
             <q-btn
               flat
               dense

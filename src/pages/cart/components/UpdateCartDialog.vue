@@ -1,85 +1,108 @@
 <template>
   <q-dialog :show="showPopup">
-    <q-card style="width: 800px; max-width: 80vw" class="q-pa-sm">
+    <q-card style="width: 80vw; max-width: 80vw" class="q-pa-sm">
       <q-card-section>
-        <div class="text-h6">Update Cart</div>
+        <div class="text-h5">Update Cart</div>
       </q-card-section>
-      <q-card-section class="row q-gutter-sm">
-        <div class="col-3">
-          <q-input
-            type="number"
-            v-model.number="userId"
-            label="User ID"
-            dense
-            readonly
-            outlined
-            :rules="[
-              (val) => (val !== null && val !== '') || 'Required',
-              (val) => (val > 0 && val < 101) || 'ID: 1-100',
-              (val) => parseInt(val) == val || 'Integer number',
-            ]"
-          />
-          <div class="col-6 row">
+      <q-form
+        @submit.prevent="
+          () => {
+            productsShowing = [];
+            searchValue = '';
+            $emit('updateCart', cart);
+          }
+        "
+      >
+        <q-card-section class="row q-gutter-sm">
+          <div class="col-3">
             <q-input
-              v-model="searchValue"
-              label="Search Product"
-              @keyup="handleSearchProduct"
-              :loading="loading"
-            >
-              <template v-slot:append>
-                <q-icon
-                  name="search"
-                  @click="handleSearchProduct"
-                  style="cursor: pointer"
-                >
-                </q-icon>
-              </template>
-            </q-input>
-          </div>
-
-          <div
-            class="q-pa-md"
-            style="max-width: 200px"
-            v-if="productsShowing.length > 0"
-          >
-            <q-list
+              type="number"
+              v-model.number="userId"
+              label="User ID"
               dense
-              bordered
-              padding
-              class="rounded-borders scroll"
-              style="max-height: 20vh"
-            >
-              <q-item
-                v-for="product in productsShowing"
-                :key="product.id"
-                clickable
-                v-ripple
-                @click="addSelectedProduct(product)"
+              readonly
+              outlined
+              :rules="[
+                (val) => (val !== null && val !== '') || 'Required',
+                (val) => (val > 0 && val < 101) || 'ID: 1-100',
+                (val) => parseInt(val) == val || 'Integer number',
+              ]"
+            />
+            <div class="col-6 row">
+              <q-input
+                v-model="searchValue"
+                label="Search Product"
+                @keyup="handleSearchProduct"
+                :loading="loading"
               >
-                <q-item-section> {{ product.title }} </q-item-section>
-              </q-item>
-            </q-list>
-          </div>
-        </div>
+                <template v-slot:append>
+                  <q-icon
+                    name="search"
+                    @click="handleSearchProduct"
+                    style="cursor: pointer"
+                  >
+                  </q-icon>
+                </template>
+              </q-input>
+            </div>
 
-        <div class="col-5">
-          <div class="text-subtitle1">List Selected Products</div>
-          <q-list
-            bordered
-            separator
-            class="rounded-borders scroll"
-            style="max-height: 50vh"
-          >
-            <q-item v-if="selectedProducts.length <= 0">
-              <q-item-section> Please choose item </q-item-section>
-            </q-item>
-            <q-item v-for="product in selectedProducts" :key="product">
-              <q-item-section>{{ product.title }}</q-item-section>
-              <q-item-section style="max-width: 50px">{{
-                product.price.toLocaleString("en-US")
-              }}</q-item-section>
-              <q-item-section>
-                <div class="col-8">
+            <div
+              class="q-pa-md"
+              style="max-width: 200px"
+              v-if="productsShowing.length > 0"
+            >
+              <q-list
+                dense
+                bordered
+                padding
+                class="rounded-borders scroll"
+                style="max-height: 20vh"
+              >
+                <q-item
+                  v-for="product in productsShowing"
+                  :key="product.id"
+                  clickable
+                  v-ripple
+                  @click="addSelectedProduct(product)"
+                >
+                  <q-item-section> {{ product.title }} </q-item-section>
+                </q-item>
+              </q-list>
+            </div>
+          </div>
+
+          <div class="col-5">
+            <div class="text-subtitle1">List Selected Products</div>
+            <q-list
+              bordered
+              separator
+              class="rounded-borders scroll"
+              style="max-height: 60vh"
+            >
+              <q-item v-if="selectedProducts.length <= 0">
+                <q-item-section> Please choose item </q-item-section>
+              </q-item>
+              <q-item v-for="product in selectedProducts" :key="product">
+                <!-- new -->
+                <q-item-section thumbnail>
+                  <img
+                    :src="product.thumbnail"
+                    spinner-color="white"
+                    style="height: 140px; max-width: 150px"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  {{ product.title }}
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>
+                    $ {{ product.price.toLocaleString("en-US") }}
+                  </q-item-label>
+                  <q-item-label caption>
+                    <q-badge> - {{ product.discountPercentage }}% </q-badge>
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section>
                   <q-input
                     type="number"
                     outlined
@@ -90,76 +113,88 @@
                       (val) => val > 0 || 'Positive Integer',
                     ]"
                     @update:model-value="updateTotal()"
+                    style="width: 70px"
                   />
-                </div>
-              </q-item-section>
-              <q-item-section avatar side>
-                <q-btn dense @click="removeSelectedProduct(product)">
-                  <q-icon name="delete" color="red" />
-                </q-btn>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </div>
-        <div class="col-3">
-          <div class="text-subtitle1">New Cart</div>
-          <q-list separator>
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>
+                    <div class="text-body1 text-red-10">
+                      <strong>
+                        ${{ product.discountedPrice.toLocaleString("en-US") }}
+                      </strong>
+                    </div>
+                  </q-item-label>
+                  <q-item-label>
+                    <div class="text-strike">
+                      ${{ product.total.toLocaleString("en-US") }}
+                    </div>
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section avatar side>
+                  <q-btn dense @click="removeSelectedProduct(product)">
+                    <q-icon name="delete" color="red" />
+                  </q-btn>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </div>
+          <div class="col-3">
+            <div class="text-subtitle1">New Cart</div>
+            <q-list separator>
+              <q-item>
+                <q-item-section>Total Product</q-item-section>
+                <q-item-section side v-model="totalProduct">{{
+                  totalProduct.toLocaleString("en-US")
+                }}</q-item-section>
+              </q-item>
+              <q-item>
+                <q-item-section>Total Quantity</q-item-section>
+                <q-item-section side v-model="totalQuantity">{{
+                  totalQuantity.toLocaleString("en-US")
+                }}</q-item-section>
+              </q-item>
+              <q-item>
+                <q-item-section>Total</q-item-section>
+                <q-item-section side v-model="total">{{
+                  total.toLocaleString("en-US")
+                }}</q-item-section>
+              </q-item>
+              <q-item>
+                <q-item-section
+                  ><strong>Total Discount </strong>
+                </q-item-section>
+                <q-item-section side v-model="totalDiscount">
+                  <strong>
+                    {{ totalDiscount.toLocaleString("en-US") }}
+                  </strong></q-item-section
+                >
+              </q-item>
+            </q-list>
+          </div>
+        </q-card-section>
+        <q-card-section>
+          <div class="row justify-end">
             <q-item>
-              <q-item-section>Total Product</q-item-section>
-              <q-item-section side v-model="totalProduct">{{
-                totalProduct.toLocaleString("en-US")
-              }}</q-item-section>
+              <q-btn
+                color="dark"
+                type="reset"
+                icon="cancel"
+                label="Cancel"
+                class="q-ma-sm"
+                @click="handleResetForm"
+                v-close-popup
+              />
+              <q-btn
+                color="primary"
+                icon="check"
+                label="Update"
+                class="q-ma-sm"
+                type="submit"
+              />
             </q-item>
-            <q-item>
-              <q-item-section>Total Quantity</q-item-section>
-              <q-item-section side v-model="totalQuantity">{{
-                totalQuantity.toLocaleString("en-US")
-              }}</q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section>Total</q-item-section>
-              <q-item-section side v-model="total">{{
-                total.toLocaleString("en-US")
-              }}</q-item-section>
-            </q-item>
-            <q-item>
-              <q-item-section><strong>Total Discount </strong> </q-item-section>
-              <q-item-section side v-model="totalDiscount">
-                <strong>
-                  {{ totalDiscount.toLocaleString("en-US") }}
-                </strong></q-item-section
-              >
-            </q-item>
-          </q-list>
-        </div>
-      </q-card-section>
-      <q-card-section>
-        <div class="row justify-end">
-          <q-item>
-            <q-btn
-              color="dark"
-              type="reset"
-              icon="cancel"
-              label="Cancel"
-              class="q-ma-sm"
-              v-close-popup
-            />
-            <q-btn
-              color="primary"
-              icon="check"
-              label="Update"
-              class="q-ma-sm"
-              @click="
-                () => {
-                  productsShowing = [];
-                  searchValue = '';
-                  $emit('updateCart', cart);
-                }
-              "
-            />
-          </q-item>
-        </div>
-      </q-card-section>
+          </div>
+        </q-card-section>
+      </q-form>
     </q-card>
   </q-dialog>
 </template>
@@ -202,6 +237,7 @@ export default {
       totalProduct,
       totalQuantity,
       userId,
+      cartId: ref(1),
       cart: ref({
         products: selectedProducts,
         total: total,
@@ -269,19 +305,33 @@ export default {
       this.resetTotal();
       this.userId = 0;
     },
+    handleSubmitForm() {
+      this.productsShowing = [];
+      this.searchValue = "";
+      this.$emit("updateCart", cart);
+    },
+    handleResetForm() {
+      this.productsShowing = [];
+      this.searchValue = "";
+      this.updateTotal();
+    },
+    async getData() {
+      try {
+        const response = await instanceAxios.get(`/cart/${this.cartId}`);
+        console.log(response.data);
+
+        this.selectedProducts = response.data.products;
+        this.userId = response.data.userId;
+      } catch (error) {}
+      this.updateTotal();
+    },
+  },
+  mounted() {
+    this.getData();
   },
   watch: {
-    showPopupA(newVal, oldVal) {
-      if (!newVal) {
-        setTimeout(() => {
-          this.cancelDialog();
-        }, 200);
-      }
-    },
     currentUpdateCart(newVal, oldVal) {
-      this.selectedProducts = newVal.products;
-      this.userId = newVal.userId;
-      this.updateTotal();
+      this.cartId = newVal.id;
     },
   },
 };
