@@ -417,30 +417,24 @@ export default {
     async getData(api) {
       this.loading = true;
       this.$router.push(api);
-      let response;
       try {
-        response = await instanceAxios.get(api);
-      } catch (error) {
-        console.log("error", error);
-        this.quasarNotify.notify({
-          message: `Server Failed`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
-      if (response.status === 200) {
-        if (response.data.carts) {
-          this.carts = response.data.carts;
-        } else {
-          this.carts = response.data;
-        }
+        const response = await instanceAxios.get(api);
 
-        if (response.data.total) {
-          this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
+        if (response.status === 200) {
+          if (response.data.carts) {
+            this.carts = response.data.carts;
+          } else {
+            this.carts = response.data;
+          }
+          if (response.data.total) {
+            this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
+          }
+        } else {
+          throw new Error("Create Fail");
         }
-      } else {
+      } catch (error) {
         this.quasarNotify.notify({
-          message: `Get Data Failed`,
+          message: `${"Server Failed" || error.message}`,
           position: "top-right",
           type: "negative",
         });
@@ -482,34 +476,32 @@ export default {
       this.currentCartId = id;
     },
     async handleDeleteCart() {
-      let response;
-
       try {
-        response = await instanceAxios.delete(`/carts/${this.currentCartId}`);
+        const response = await instanceAxios.delete(
+          `/carts/${this.currentCartId}`
+        );
+
+        if (response.status === 200) {
+          const deletedCart = await response.data;
+          const index = this.carts.findIndex(
+            (cart) => cart.id == deletedCart.id
+          );
+          this.carts.splice(index, 1);
+          this.confirmDelete = false;
+          this.currentCartId = -1;
+
+          this.quasarNotify.notify({
+            message: "Delete Successfully",
+            position: "top-right",
+            type: "positive",
+          });
+        } else {
+          throw new Error("Delete Fail");
+        }
       } catch (error) {
         console.log(error);
         this.quasarNotify.notify({
-          message: "Delete Server fail",
-          position: "top-right",
-          type: "negative",
-        });
-      }
-
-      if (response.status === 200) {
-        const deletedCart = await response.data;
-        const index = this.carts.findIndex((cart) => cart.id == deletedCart.id);
-        this.carts.splice(index, 1);
-        this.confirmDelete = false;
-        this.currentCartId = -1;
-
-        this.quasarNotify.notify({
-          message: "Delete successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } else {
-        this.quasarNotify.notify({
-          message: "Delete fail",
+          message: `${error.response?.data.message || error.message}`,
           position: "top-right",
           type: "negative",
         });
@@ -517,86 +509,74 @@ export default {
     },
     async handleUpdateCart(cart) {
       const id = this.currentUpdateCart.id;
-      let response;
+
       try {
-        response = await instanceAxios.put(`carts/${id}`, { ...cart });
+        const response = await instanceAxios.put(`carts/${id}`, { ...cart });
+
+        if (response.status === 200) {
+          this.showUpdateDialog = false;
+          const updateCart = this.carts.filter((c) => c.id == id)[0];
+          Object.assign(updateCart, response.data);
+          cart = [];
+          this.quasarNotify.notify({
+            message: "Update cart successfully",
+            position: "top-right",
+            type: "positive",
+          });
+        } else {
+          throw new Error("Update failed ");
+        }
       } catch (error) {
         this.quasarNotify.notify({
-          message: `${error.response.data.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
-
-      if (response.status === 200) {
-        this.showUpdateDialog = false;
-        const updateCart = this.carts.filter((c) => c.id == id)[0];
-        Object.assign(updateCart, response.data);
-        cart = [];
-        this.quasarNotify.notify({
-          message: "Update cart successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } else {
-        this.quasarNotify.notify({
-          message: `Update failed `,
+          message: `${error.response?.data.message || error.message}`,
           position: "top-right",
           type: "negative",
         });
       }
     },
     async handleCreateCart(cart) {
-      let response;
       try {
-        response = await instanceAxios.post(`/carts/add`, { ...cart });
+        const response = await instanceAxios.post(`/carts/add`, { ...cart });
+        if (response.status === 200) {
+          this.showCreateDialog = false;
+          this.carts.unshift(response.data);
+          cart = [];
+          this.quasarNotify.notify({
+            message: "Create new cart successfully",
+            position: "top-right",
+            type: "positive",
+          });
+        } else {
+          throw new Error("Create failed");
+        }
       } catch (error) {
         this.quasarNotify.notify({
-          message: `${error.response.data.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
-
-      if (response.status === 200) {
-        this.showCreateDialog = false;
-        this.carts.unshift(response.data);
-        cart = [];
-        this.quasarNotify.notify({
-          message: "Create new cart successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } else {
-        this.quasarNotify.notify({
-          message: `Create failed `,
+          message: `${error.response?.data.message || error.message}`,
           position: "top-right",
           type: "negative",
         });
       }
     },
     async handleSearchCart() {
-      let response;
       try {
-        response = await instanceAxios.get(`/carts/user/${this.searchCart}`);
+        const response = await instanceAxios.get(
+          `/carts/user/${this.searchCart}`
+        );
+
+        if (response.status === 200) {
+          this.searchCart = 0;
+          if (response.data.carts.length > 0) {
+            this.handleShowDetailDialog(response.data.carts[0]);
+          } else {
+            throw new Error(`User does not have any cart `);
+          }
+        }
       } catch (error) {
         this.quasarNotify.notify({
-          message: `${error.response.data.message}`,
+          message: `${error.response?.data.message || error.message}`,
           position: "top-right",
           type: "negative",
         });
-      }
-      if (response.status === 200) {
-        this.searchCart = 0;
-        if (response.data.carts.length > 0) {
-          this.handleShowDetailDialog(response.data.carts[0]);
-        } else {
-          this.quasarNotify.notify({
-            message: `User does not have any cart `,
-            position: "top-right",
-            type: "negative",
-          });
-        }
       }
     },
     handleShowUpdateDialog(cart) {
