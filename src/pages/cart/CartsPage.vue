@@ -22,7 +22,7 @@
                     <q-range
                       label
                       color="green"
-                      v-model="totalFilter"
+                      v-model="filter.totalFilter"
                       :min="0"
                       :max="5000"
                     />
@@ -34,7 +34,7 @@
                     <q-range
                       label
                       color="orange"
-                      v-model="discountedTotalFilter"
+                      v-model="filter.discountedTotalFilter"
                       :min="0"
                       :max="5000"
                     />
@@ -46,7 +46,7 @@
                     <q-range
                       label
                       color="purple"
-                      v-model="totalQuantityFilter"
+                      v-model="filter.totalQuantityFilter"
                       :min="0"
                       :max="100"
                     />
@@ -164,7 +164,7 @@
               active-color="primary"
               @update:model-value="
                 () => {
-                  getData(convertToAPI());
+                  getData();
                 }
               "
             />
@@ -180,7 +180,7 @@
               @update:model-value="
                 () => {
                   currentPage = 1;
-                  getData(convertToAPI());
+                  getData();
                 }
               "
             >
@@ -277,6 +277,8 @@ import UpdateCartDialog from "./components/UpdateCartDialog.vue";
 import CartDetailDialog from "./components/CartDetailDialog.vue";
 import instanceAxios from "src/axios-instance";
 
+const urlSearchParams = new URLSearchParams();
+
 export default {
   name: "CartsPage",
   components: {
@@ -289,6 +291,7 @@ export default {
     const carts = ref([]);
     const quasarNotify = useQuasar();
     const confirmDelete = ref(false);
+    const filter = {};
 
     // table
     const loading = ref(true);
@@ -370,6 +373,9 @@ export default {
       },
     ];
 
+    urlSearchParams.set("limit", rowsPerPage.value);
+    urlSearchParams.set("skip", rowsPerPage.value * (currentPage.value - 1));
+
     return {
       carts,
       columns,
@@ -395,19 +401,26 @@ export default {
       rangeDiscountedTotalFilter,
       rangeTotal,
       rangeTotalQuantityFilter,
+      filter,
       currentDetailCart: ref([]),
     };
   },
   mounted() {
-    this.getData(this.convertToAPI());
+    this.filter.limit = this.rowsPerPage;
+    this.filter.skip = this.rowsPerPage * (this.currentPage - 1);
+    this.getData();
   },
   methods: {
-    async getData(api) {
+    async getData() {
       this.loading = true;
-      this.$router.push(api);
+      // this.$router.push(api);
+      console.log("response", urlSearchParams({ ...this.filter }));
 
       try {
-        const response = await instanceAxios.get(api);
+        const response = await instanceAxios.request({
+          url: "cart",
+          params: { ...this.filter },
+        });
 
         if (response.data.carts) {
           this.carts = response.data.carts;
@@ -426,52 +439,6 @@ export default {
       }
 
       this.loading = false;
-    },
-
-    convertToAPI() {
-      const filters = [
-        {
-          name: "total",
-          filter: this.totalFilter,
-          range: this.rangeTotal,
-        },
-        {
-          name: "discountedTotal",
-          filter: this.discountedTotalFilter,
-          range: this.rangeDiscountedTotalFilter,
-        },
-        {
-          name: "totalQuantity",
-          filter: this.totalQuantityFilter,
-          range: this.rangeTotalQuantityFilter,
-        },
-      ];
-
-      // const apiTextObjects = filter
-      //   .filter((item) => item.range != item.filter.max - item.filter.min)
-      //   .map(
-      //     (item) =>
-      //       `${item.name}From=${item.filter.min}&${item.name}To=${item.filter.max}`
-      //   );
-      // const apiText = `/carts?${apiTextObjects.join("&")}&limit=${
-      //   this.rowsPerPage
-      // }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
-      // return apiText;
-
-      const urlSearchParams = new URLSearchParams();
-
-      filters.forEach((item) => {
-        if (item.range !== item.filter.max - item.filter.min) {
-          urlSearchParams.set(`${item.name}From`, item.filter.min);
-          urlSearchParams.set(`${item.name}To`, item.filter.max);
-        }
-      });
-
-      urlSearchParams.set("limit", this.rowsPerPage);
-      urlSearchParams.set("skip", this.rowsPerPage * (this.currentPage - 1));
-
-      const apiText = `/carts?${urlSearchParams.toString()}`;
-      return apiText;
     },
 
     openConfirmDeleteDialog(id) {
@@ -587,7 +554,7 @@ export default {
     },
 
     hanldeFilter() {
-      this.getData(this.convertToAPI());
+      this.getData();
     },
   },
 };
