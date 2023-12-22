@@ -289,17 +289,12 @@
 <script>
 import { useQuasar } from "quasar";
 import { ref } from "vue";
-import axios from "axios";
 import ProductViewCard from "./components/ProductViewCard.vue";
 import ProductDialog from "./components/ProductDialog.vue";
 import BulkPricingDialog from "./components/BulkPricingDialog.vue";
+import instanceAxios from "src/axios-instance";
 
-const baseURL = import.meta.env.VITE_BASE_API;
 const PRODUCT_CATEGORIES_API = import.meta.env.VITE_PRODUCT_CATEGORIES_API;
-
-const instanceAxios = axios.create({
-  baseURL: baseURL,
-});
 
 export default {
   components: {
@@ -309,8 +304,8 @@ export default {
     BulkPricingDialog,
     BulkPricingDialog,
     ProductViewCard,
-    ProductDialog
-},
+    ProductDialog,
+  },
 
   mounted() {
     this.getData();

@@ -4,12 +4,11 @@
 
     <q-table> </q-table>
   </div>
-
 </template>
 
 <script>
+import instanceAxios from "src/axios-instance";
 import { ref } from "vue";
-
 export default {
   name: "UserPage",
   components: {},

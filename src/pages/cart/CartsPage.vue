@@ -271,17 +271,11 @@
 
 <script>
 import { ref } from "vue";
-import axios from "axios";
 import { useQuasar } from "quasar";
 import AddNewCartDialog from "./components/AddNewCartDialog.vue";
 import UpdateCartDialog from "./components/UpdateCartDialog.vue";
 import CartDetailDialog from "./components/CartDetailDialog.vue";
-
-const baseURL = import.meta.env.VITE_BASE_API;
-
-const instanceAxios = axios.create({
-  baseURL: baseURL,
-});
+import instanceAxios from "src/axios-instance";
 
 export default {
   name: "CartsPage",
@@ -411,20 +405,17 @@ export default {
     async getData(api) {
       this.loading = true;
       this.$router.push(api);
+
       try {
         const response = await instanceAxios.get(api);
 
-        if (response.status === 200) {
-          if (response.data.carts) {
-            this.carts = response.data.carts;
-          } else {
-            this.carts = response.data;
-          }
-          if (response.data.total) {
-            this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
-          }
+        if (response.data.carts) {
+          this.carts = response.data.carts;
         } else {
-          throw new Error("Create Fail");
+          this.carts = response.data;
+        }
+        if (response.data.total) {
+          this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
         }
       } catch (error) {
         this.quasarNotify.notify({
@@ -433,10 +424,12 @@ export default {
           type: "negative",
         });
       }
+
       this.loading = false;
     },
+
     convertToAPI() {
-      const filter = [
+      const filters = [
         {
           name: "total",
           filter: this.totalFilter,
@@ -454,44 +447,55 @@ export default {
         },
       ];
 
-      const apiTextObjects = filter
-        .filter((item) => item.range != item.filter.max - item.filter.min)
-        .map(
-          (item) =>
-            `${item.name}From=${item.filter.min}&${item.name}To=${item.filter.max}`
-        );
-      const apiText = `/carts?${apiTextObjects.join("&")}&limit=${
-        this.rowsPerPage
-      }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
+      // const apiTextObjects = filter
+      //   .filter((item) => item.range != item.filter.max - item.filter.min)
+      //   .map(
+      //     (item) =>
+      //       `${item.name}From=${item.filter.min}&${item.name}To=${item.filter.max}`
+      //   );
+      // const apiText = `/carts?${apiTextObjects.join("&")}&limit=${
+      //   this.rowsPerPage
+      // }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
+      // return apiText;
+
+      const urlSearchParams = new URLSearchParams();
+
+      filters.forEach((item) => {
+        if (item.range !== item.filter.max - item.filter.min) {
+          urlSearchParams.set(`${item.name}From`, item.filter.min);
+          urlSearchParams.set(`${item.name}To`, item.filter.max);
+        }
+      });
+
+      urlSearchParams.set("limit", this.rowsPerPage);
+      urlSearchParams.set("skip", this.rowsPerPage * (this.currentPage - 1));
+
+      const apiText = `/carts?${urlSearchParams.toString()}`;
       return apiText;
     },
+
     openConfirmDeleteDialog(id) {
       this.confirmDelete = true;
       this.currentCartId = id;
     },
+
     async handleDeleteCart() {
       try {
         const response = await instanceAxios.delete(
           `/carts/${this.currentCartId}`
         );
 
-        if (response.status === 200) {
-          const deletedCart = await response.data;
-          const index = this.carts.findIndex(
-            (cart) => cart.id == deletedCart.id
-          );
-          this.carts.splice(index, 1);
-          this.confirmDelete = false;
-          this.currentCartId = -1;
+        const deletedCart = await response.data;
+        const index = this.carts.findIndex((cart) => cart.id == deletedCart.id);
+        this.carts.splice(index, 1);
+        this.confirmDelete = false;
+        this.currentCartId = -1;
 
-          this.quasarNotify.notify({
-            message: "Delete Successfully",
-            position: "top-right",
-            type: "positive",
-          });
-        } else {
-          throw new Error("Delete Fail");
-        }
+        this.quasarNotify.notify({
+          message: "Delete Successfully",
+          position: "top-right",
+          type: "positive",
+        });
       } catch (error) {
         console.log(error);
         this.quasarNotify.notify({
@@ -501,25 +505,22 @@ export default {
         });
       }
     },
+
     async handleUpdateCart(cart) {
       const id = this.currentUpdateCart.id;
 
       try {
         const response = await instanceAxios.put(`carts/${id}`, { ...cart });
 
-        if (response.status === 200) {
-          this.showUpdateDialog = false;
-          const updateCart = this.carts.filter((c) => c.id == id)[0];
-          Object.assign(updateCart, response.data);
-          cart = [];
-          this.quasarNotify.notify({
-            message: "Update cart successfully",
-            position: "top-right",
-            type: "positive",
-          });
-        } else {
-          throw new Error("Update failed ");
-        }
+        this.showUpdateDialog = false;
+        const updateCart = this.carts.filter((c) => c.id == id)[0];
+        Object.assign(updateCart, response.data);
+        cart = [];
+        this.quasarNotify.notify({
+          message: "Update cart successfully",
+          position: "top-right",
+          type: "positive",
+        });
       } catch (error) {
         this.quasarNotify.notify({
           message: `${error.response?.data.message || error.message}`,
@@ -528,24 +529,23 @@ export default {
         });
       }
     },
+
     handleResetUpdateCartDialog() {
       this.currentUpdateCart = [];
     },
+
     async handleCreateCart(cart) {
       try {
         const response = await instanceAxios.post(`/carts/add`, { ...cart });
-        if (response.status === 200) {
-          this.showCreateDialog = false;
-          this.carts.unshift(response.data);
-          cart = [];
-          this.quasarNotify.notify({
-            message: "Create new cart successfully",
-            position: "top-right",
-            type: "positive",
-          });
-        } else {
-          throw new Error("Create failed");
-        }
+
+        this.showCreateDialog = false;
+        this.carts.unshift(response.data);
+        cart = [];
+        this.quasarNotify.notify({
+          message: "Create new cart successfully",
+          position: "top-right",
+          type: "positive",
+        });
       } catch (error) {
         this.quasarNotify.notify({
           message: `${error.response?.data.message || error.message}`,
@@ -554,19 +554,18 @@ export default {
         });
       }
     },
+
     async handleSearchCart() {
       try {
         const response = await instanceAxios.get(
           `/carts/user/${this.searchCart}`
         );
 
-        if (response.status === 200) {
-          this.searchCart = 0;
-          if (response.data.carts.length > 0) {
-            this.handleShowDetailDialog(response.data.carts[0]);
-          } else {
-            throw new Error(`User does not have any cart `);
-          }
+        this.searchCart = 0;
+        if (response.data.carts.length > 0) {
+          this.handleShowDetailDialog(response.data.carts[0]);
+        } else {
+          throw new Error(`User does not have any cart `);
         }
       } catch (error) {
         this.quasarNotify.notify({
@@ -576,14 +575,17 @@ export default {
         });
       }
     },
+
     handleShowUpdateDialog(cart) {
       this.currentUpdateCart = cart;
       this.showUpdateDialog = true;
     },
+
     handleShowDetailDialog(cart) {
       this.currentDetailCart = cart;
       this.showDetailDialog = true;
     },
+
     hanldeFilter() {
       this.getData(this.convertToAPI());
     },

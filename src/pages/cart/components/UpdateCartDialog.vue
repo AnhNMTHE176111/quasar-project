@@ -205,13 +205,8 @@
 </template>
 
 <script>
-import axios from "axios";
+import instanceAxios from "src/axios-instance";
 import { ref } from "vue";
-
-const baseURL = import.meta.env.VITE_BASE_API;
-const instanceAxios = axios.create({
-  baseURL: baseURL,
-});
 
 export default {
   name: "UpdateCartDialog",

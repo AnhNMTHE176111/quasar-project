@@ -127,7 +127,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 
 export default {
   props: {
