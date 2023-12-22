@@ -9,10 +9,10 @@ table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK CMS CART =========================
 review1:
--> chia folder
-function nen ngắn, ko nên có else
-const, let chia rõ ràng hơn
-edit = view + edit
+-> chia folder <ok></ok>  
+function nen ngắn, ko nên có else <ok></ok>
+const, let chia rõ ràng hơn <ok></ok>
+edit = view + edit <ok></ok>
 
 
 table

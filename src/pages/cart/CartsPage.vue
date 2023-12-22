@@ -133,7 +133,6 @@
       <template v-slot:body-cell-action="props">
         <q-td>
           <div class="row justify-center q-gutter-md">
-            
             <q-btn
               flat
               dense
@@ -259,6 +258,7 @@
     :showPopup="showUpdateDialog"
     :currentUpdateCart="currentUpdateCart"
     @updateCart="handleUpdateCart"
+    @resetUpdateCartDialog="handleResetUpdateCartDialog"
   />
 
   <CartDetailDialog
@@ -527,6 +527,9 @@ export default {
           type: "negative",
         });
       }
+    },
+    handleResetUpdateCartDialog() {
+      this.currentUpdateCart = [];
     },
     async handleCreateCart(cart) {
       try {

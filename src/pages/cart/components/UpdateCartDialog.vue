@@ -12,6 +12,11 @@
             $emit('updateCart', cart);
           }
         "
+        @reset="
+          () => {
+            $emit('resetUpdateCartDialog');
+          }
+        "
       >
         <q-card-section class="row q-gutter-sm">
           <div class="col-3">
@@ -20,8 +25,8 @@
               v-model.number="userId"
               label="User ID"
               dense
-              readonly
               outlined
+              readonly
               :rules="[
                 (val) => (val !== null && val !== '') || 'Required',
                 (val) => (val > 0 && val < 101) || 'ID: 1-100',
@@ -210,7 +215,7 @@ const instanceAxios = axios.create({
 
 export default {
   name: "UpdateCartDialog",
-  emits: ["updateCart"],
+  emits: ["updateCart", "resetUpdateCartDialog"],
   props: {
     showPopup: Boolean,
     currentUpdateCart: Object,
@@ -237,7 +242,8 @@ export default {
       totalProduct,
       totalQuantity,
       userId,
-      cartId: ref(1),
+      cartId: ref(0),
+      storageCart: ref([]),
       cart: ref({
         products: selectedProducts,
         total: total,
@@ -326,12 +332,12 @@ export default {
       this.updateTotal();
     },
   },
-  mounted() {
-    this.getData();
-  },
   watch: {
     currentUpdateCart(newVal, oldVal) {
-      this.cartId = newVal.id;
+      if (newVal.id) {
+        this.cartId = newVal.id;
+        this.getData();
+      }
     },
   },
 };
