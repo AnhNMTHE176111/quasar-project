@@ -100,14 +100,13 @@
               dense
               icon="edit"
               color="primary"
-              @click="handleShowUpdateDialog(props.row)"
             />
             <q-btn
               flat
               dense
               icon="delete"
               color="negative"
-              @click="openConfirmDeleteDialog(props.row.id)"
+              @click="openConfirmDeleteDialog(props.row)"
             />
           </div>
         </q-td>
@@ -159,6 +158,27 @@
       </template>
     </q-table>
   </div>
+
+  <q-dialog v-model="confirmDelete" persistent>
+    <q-card>
+      <q-card-section class="row items-center">
+        <span class="q-ml-sm"
+          >Do you want to delete cart with ID: {{ currentUser.id }}?
+        </span>
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Cancel" color="primary" v-close-popup />
+        <q-btn
+          flat
+          label="Delete"
+          color="danger"
+          @click="handleDeleteUsers()"
+          v-close-popup
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
@@ -239,11 +259,17 @@ export default {
         field: "weight",
         align: "center",
       },
+      {
+        name: "action",
+        label: "Action",
+        align: "center",
+      },
     ];
 
     return {
       loading: ref(true),
       selectedMultipleUsers: ref([]),
+      confirmDelete: ref(false),
       quasarNotify,
       params,
       users,
@@ -287,7 +313,35 @@ export default {
 
       this.loading = false;
     },
+    async handleDeleteUsers() {
+      try {
+        const response = await instanceAxios.delete(
+          `/users/${this.currentUser.id}`
+        );
 
+        const index = this.users.findIndex((user) => user.id == this.currentUser.id);
+        this.users.splice(index, 1);
+        this.confirmDelete = false;
+        this.currentUser = [];
+
+        this.quasarNotify.notify({
+          message: "Delete Successfully",
+          position: "top-right",
+          type: "positive",
+        });
+      } catch (error) {
+        console.log(error);
+        this.quasarNotify.notify({
+          message: `${error.response?.data.message || error.message}`,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+    },
+    openConfirmDeleteDialog(user) {
+      this.confirmDelete = true;
+      this.currentUser = user;
+    },
     hanldeFilter() {},
   },
 };
