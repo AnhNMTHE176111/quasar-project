@@ -7,9 +7,23 @@ api: https://dummyjson.com/products
 UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
+================ TASK CMS USER =========================
+review1:
+first + last => fullname (sticky when scroll horizontal)
+table just scrol vertical, not all page
+Email => left
+visible column => select column to show
+
+filter => create select box (can typing...) then show fullname below
+          like dropbox (q-select), choose a person and show detail
+
+detail person => show all information
+
+
+
 ================ TASK CMS CART =========================
 review1:
--> chia folder <ok></ok>  
+-> chia folder <ok></ok>
 function nen ngắn, ko nên có else <ok></ok>
 const, let chia rõ ràng hơn <ok></ok>
 edit = view + edit <ok></ok>
