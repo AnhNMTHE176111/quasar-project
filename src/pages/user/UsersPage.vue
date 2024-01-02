@@ -2,15 +2,32 @@
   <div class="q-pa-md">
     <div class="q-pa-md shadow-3 q-mb-md">
       <div class="row justify-between">
-        <div class="col-1 row justify-start">
-          <div>
-            <q-btn
-              class="q-ma-md"
-              icon="search"
-              color="blue"
-              @click="promptSearchUser = true"
-            />
-          </div>
+        <div class="col-2 row justify-start">
+          <q-input
+            outlined
+            v-model="searchUser"
+            @keypress="
+              (event) => {
+                if (event.key == 'Enter') handleSearchUser();
+              }
+            "
+            label="Search"
+          >
+            <template v-slot:append>
+              <q-icon
+                name="close"
+                @click="() => (searchUser = '')"
+                v-if="searchUser.length > 0"
+                color="blue"
+                style="cursor: pointer"
+              />
+              <q-icon
+                name="search"
+                @click="handleSearchUser"
+                style="cursor: pointer"
+              />
+            </template>
+          </q-input>
         </div>
         <div class="col-7 justify-center">
           <form @submit.prevent="hanldeFilter" class="col-12">
@@ -174,30 +191,6 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
-
-  <q-dialog v-model="promptSearchUser" persistent>
-    <q-card style="min-width: 350px">
-      <form action="" @submit.prevent="handleSearchUser">
-        <q-card-section>
-          <div class="text-h6">Get Users of a user:</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-input
-            dense
-            v-model.number="searchUser"
-            autofocus
-            @keyup.enter="promptSearchUser = false"
-          />
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" @click="searchUser = ''" v-close-popup />
-          <q-btn flat label="Search" type="submit" v-close-popup />
-        </q-card-actions>
-      </form>
-    </q-card>
-  </q-dialog>
 </template>
 
 <script>
@@ -311,9 +304,14 @@ export default {
       this.loading = true;
 
       try {
+        console.log("nasd", this.params.q);
         const response = await instanceAxios.request({
-          url: "users",
+          url: this.params.q == "" || !this.params.q ? "users" : "users/search",
           params: { ...this.params },
+        });
+
+        this.$router.push({
+          query: { ...this.params },
         });
 
         if (response.data.users) {
@@ -366,27 +364,8 @@ export default {
       this.currentUser = user;
     },
     async handleSearchUser() {
-      console.log(this.searchUser);
-
-      try {
-        const response = await instanceAxios.get(
-          `users/search?q=${this.searchUser.trim()}`
-        );
-
-        if (response.data.users.length > 0) {
-          console.log(response.data.users);
-        } else {
-          throw new Error(`User does not exist `);
-        }
-      } catch (error) {
-        this.quasarNotify.notify({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
-
-      this.searchUser = "";
+      this.params.q = this.searchUser.trim();
+      this.getData();
     },
     hanldeFilter() {},
   },
