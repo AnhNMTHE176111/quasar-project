@@ -8,7 +8,7 @@
               class="q-ma-md"
               icon="search"
               color="blue"
-              @click="promptSearchCart = true"
+              @click="promptSearchUser = true"
             />
           </div>
         </div>
@@ -95,12 +95,7 @@
       <template v-slot:body-cell-action="props">
         <q-td>
           <div class="row justify-center q-gutter-md">
-            <q-btn
-              flat
-              dense
-              icon="edit"
-              color="primary"
-            />
+            <q-btn flat dense icon="edit" color="primary" />
             <q-btn
               flat
               dense
@@ -163,7 +158,7 @@
     <q-card>
       <q-card-section class="row items-center">
         <span class="q-ml-sm"
-          >Do you want to delete cart with ID: {{ currentUser.id }}?
+          >Do you want to delete User with ID: {{ currentUser.id }}?
         </span>
       </q-card-section>
 
@@ -177,6 +172,30 @@
           v-close-popup
         />
       </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+  <q-dialog v-model="promptSearchUser" persistent>
+    <q-card style="min-width: 350px">
+      <form action="" @submit.prevent="handleSearchUser">
+        <q-card-section>
+          <div class="text-h6">Get Users of a user:</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          <q-input
+            dense
+            v-model.number="searchUser"
+            autofocus
+            @keyup.enter="promptSearchUser = false"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancel" @click="searchUser = ''" v-close-popup />
+          <q-btn flat label="Search" type="submit" v-close-popup />
+        </q-card-actions>
+      </form>
     </q-card>
   </q-dialog>
 </template>
@@ -270,6 +289,8 @@ export default {
       loading: ref(true),
       selectedMultipleUsers: ref([]),
       confirmDelete: ref(false),
+      promptSearchUser: ref(false),
+      searchUser: ref(""),
       quasarNotify,
       params,
       users,
@@ -319,7 +340,9 @@ export default {
           `/users/${this.currentUser.id}`
         );
 
-        const index = this.users.findIndex((user) => user.id == this.currentUser.id);
+        const index = this.users.findIndex(
+          (user) => user.id == this.currentUser.id
+        );
         this.users.splice(index, 1);
         this.confirmDelete = false;
         this.currentUser = [];
@@ -341,6 +364,29 @@ export default {
     openConfirmDeleteDialog(user) {
       this.confirmDelete = true;
       this.currentUser = user;
+    },
+    async handleSearchUser() {
+      console.log(this.searchUser);
+
+      try {
+        const response = await instanceAxios.get(
+          `users/search?q=${this.searchUser.trim()}`
+        );
+
+        if (response.data.users.length > 0) {
+          console.log(response.data.users);
+        } else {
+          throw new Error(`User does not exist `);
+        }
+      } catch (error) {
+        this.quasarNotify.notify({
+          message: `${error.response?.data.message || error.message}`,
+          position: "top-right",
+          type: "negative",
+        });
+      }
+
+      this.searchUser = "";
     },
     hanldeFilter() {},
   },
