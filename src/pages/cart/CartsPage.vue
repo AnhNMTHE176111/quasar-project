@@ -274,12 +274,10 @@
 <script>
 import { ref } from "vue";
 import { useQuasar } from "quasar";
-import queryString from "query-string";
 import AddNewCartDialog from "./components/AddNewCartDialog.vue";
 import UpdateCartDialog from "./components/UpdateCartDialog.vue";
 import CartDetailDialog from "./components/CartDetailDialog.vue";
 import instanceAxios from "src/axios-instance";
-import object from "lodash-es/object";
 
 export default {
   name: "CartsPage",
@@ -413,16 +411,15 @@ export default {
     async getData() {
       this.loading = true;
 
+      const params = [];
+
+      Object.keys(this.filter).map((item) => {
+        if (typeof this.filter[item] != "object") {
+          params[item] = this.filter[item];
+        }
+      });
+
       try {
-        const params = [];
-
-        Object.keys(this.filter).map((item) => {
-          if (typeof this.filter[item] != "object") {
-            params[item] = this.filter[item];
-          }
-        });
-
-        console.log(params);
 
         const response = await instanceAxios.request({
           url: "cart",
