@@ -164,6 +164,7 @@
               active-color="primary"
               @update:model-value="
                 () => {
+                  filter.skip = rowsPerPage * (currentPage - 1);
                   getData();
                 }
               "
@@ -180,6 +181,7 @@
               @update:model-value="
                 () => {
                   currentPage = 1;
+                  filter.limit = rowsPerPage;
                   getData();
                 }
               "
@@ -272,12 +274,12 @@
 <script>
 import { ref } from "vue";
 import { useQuasar } from "quasar";
+import queryString from "query-string";
 import AddNewCartDialog from "./components/AddNewCartDialog.vue";
 import UpdateCartDialog from "./components/UpdateCartDialog.vue";
 import CartDetailDialog from "./components/CartDetailDialog.vue";
 import instanceAxios from "src/axios-instance";
-
-const urlSearchParams = new URLSearchParams();
+import object from "lodash-es/object";
 
 export default {
   name: "CartsPage",
@@ -291,7 +293,7 @@ export default {
     const carts = ref([]);
     const quasarNotify = useQuasar();
     const confirmDelete = ref(false);
-    const filter = {};
+    const filter = ref([]);
 
     // table
     const loading = ref(true);
@@ -373,9 +375,6 @@ export default {
       },
     ];
 
-    urlSearchParams.set("limit", rowsPerPage.value);
-    urlSearchParams.set("skip", rowsPerPage.value * (currentPage.value - 1));
-
     return {
       carts,
       columns,
@@ -413,13 +412,25 @@ export default {
   methods: {
     async getData() {
       this.loading = true;
-      // this.$router.push(api);
-      console.log("response", urlSearchParams({ ...this.filter }));
 
       try {
+        const params = [];
+
+        Object.keys(this.filter).map((item) => {
+          if (typeof this.filter[item] != "object") {
+            params[item] = this.filter[item];
+          }
+        });
+
+        console.log(params);
+
         const response = await instanceAxios.request({
           url: "cart",
-          params: { ...this.filter },
+          params: { ...params },
+        });
+
+        this.$router.push({
+          query: { ...params },
         });
 
         if (response.data.carts) {
@@ -554,6 +565,13 @@ export default {
     },
 
     hanldeFilter() {
+      Object.keys(this.filter).map((item, index) => {
+        if (typeof this.filter[item] == "object") {
+          this.filter[`${item}Min`] = this.filter[item].min;
+          this.filter[`${item}Max`] = this.filter[item].max;
+        }
+      });
+
       this.getData();
     },
   },
