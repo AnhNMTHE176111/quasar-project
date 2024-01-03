@@ -402,11 +402,13 @@ export default {
       currentDetailCart: ref([]),
     };
   },
+
   mounted() {
     this.filter.limit = this.rowsPerPage;
     this.filter.skip = this.rowsPerPage * (this.currentPage - 1);
     this.getData();
   },
+
   methods: {
     async getData() {
       this.loading = true;
@@ -420,7 +422,6 @@ export default {
       });
 
       try {
-
         const response = await instanceAxios.request({
           url: "cart",
           params: { ...params },
@@ -430,11 +431,8 @@ export default {
           query: { ...params },
         });
 
-        if (response.data.carts) {
-          this.carts = response.data.carts;
-        } else {
-          this.carts = response.data;
-        }
+        this.carts = response.data.carts || response.data;
+
         if (response.data.total) {
           this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
         }

@@ -9,10 +9,10 @@ table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK CMS USER =========================
 review1:
-first + last => fullname (sticky when scroll horizontal)
-table just scrol vertical, not all page
-Email => left
-visible column => select column to show
+first + last => fullname (sticky when scroll horizontal) <ok></ok>
+table just scrol vertical, not all page <ok></ok>
+Email => left <ok></ok>
+visible column => select column to show <ok></ok>
 
 filter => create select box (can typing...) then show fullname below
           like dropbox (q-select), choose a person and show detail

@@ -92,7 +92,12 @@
 
           <div class="row justify-end q-gutter-sm">
             <q-btn icon="delete" color="dark" v-close-popup>Cancel</q-btn>
-            <q-btn icon="edit" color="primary" @click="$emit('showUpdateDialog')">Edit</q-btn>
+            <q-btn
+              icon="edit"
+              color="primary"
+              @click="$emit('showUpdateDialog')"
+              >Edit</q-btn
+            >
           </div>
         </div>
       </q-card-section>
@@ -105,7 +110,7 @@ import { ref } from "vue";
 
 export default {
   name: "CartDetailDialog",
-  emits: ['showUpdateDialog'],
+  emits: ["showUpdateDialog"],
   props: {
     showPopup: Boolean,
     currentDetailCart: Object,

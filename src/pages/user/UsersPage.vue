@@ -33,7 +33,25 @@
           <form @submit.prevent="hanldeFilter" class="col-12">
             <div class="q-pa-md">
               <div class="col-12 row justify-end">
-                <q-btn type="submit"> Submit </q-btn>
+                <!-- <q-select
+                  filled
+                  dense
+                  v-model="model"
+                  use-input
+                  input-debounce="0"
+                  label="Simple filter"
+                  :options="options"
+                  @filter="filterFn"
+                  style="width: 250px"
+                >
+                  <template v-slot:no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">
+                        No results
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                </q-select> -->
               </div>
             </div>
           </form>
@@ -51,55 +69,10 @@
       </div>
     </div>
 
-    <q-markup-table v-if="loading">
-      <thead>
-        <tr>
-          <th class="text-left" style="width: 150px">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr v-for="n in 14" :key="n">
-          <td class="text-left">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="50px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="35px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="65px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="25px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-        </tr>
-      </tbody>
-    </q-markup-table>
+    <TableSkeleton :loading="loading" />
 
     <q-table
+      class="my-table"
       title="Users"
       selection="multiple"
       v-model:selected="selectedMultipleUsers"
@@ -107,11 +80,33 @@
       :rows="users"
       :pagination="pagination"
       :loading="loading"
-      v-else
+      :visible-columns="visibleColumns"
+      virtual-scroll
     >
+      <template v-slot:top="">
+        <div class="col-2 q-table__title">Users</div>
+
+        <q-space />
+
+        <q-select
+          v-model="visibleColumns"
+          multiple
+          outlined
+          dense
+          options-dense
+          :display-value="$q.lang.table.columns"
+          emit-value
+          map-options
+          :options="columns"
+          option-value="name"
+          options-cover
+          style="min-width: 150px"
+        />
+      </template>
+
       <template v-slot:body-cell-action="props">
         <q-td>
-          <div class="row justify-center q-gutter-md">
+          <div class="row justify-center q-gutter-md" style="width: 100px">
             <q-btn flat dense icon="edit" color="primary" />
             <q-btn
               flat
@@ -171,7 +166,7 @@
     </q-table>
   </div>
 
-  <q-dialog v-model="confirmDelete" persistent>
+  <!-- <q-dialog v-model="confirmDelete" persistent>
     <q-card>
       <q-card-section class="row items-center">
         <span class="q-ml-sm"
@@ -190,16 +185,30 @@
         />
       </q-card-actions>
     </q-card>
-  </q-dialog>
+  </q-dialog> -->
+
+  <ConfirmDialog
+    v-model="confirmDelete"
+    :confirm="confirmDelete"
+    :title="`Do you want to delete User with ID: ${currentUser.id}?`"
+    btnTitle="Delete"
+    @handleConfirm="handleDeleteUsers()"
+  />
 </template>
 
 <script>
-import instanceAxios from "src/axios-instance";
-import { useQuasar } from "quasar";
+import { Notify, useQuasar } from "quasar";
 import { ref } from "vue";
+import instanceAxios from "src/axios-instance";
+import columns from "./columns";
+import TableSkeleton from "src/components/TableSkeleton.vue";
+import ConfirmDialog from "src/components/ConfirmDialog.vue";
+
 export default {
   name: "UserPage",
-  components: {},
+
+  components: { TableSkeleton, TableSkeleton, ConfirmDialog },
+
   setup() {
     const quasarNotify = useQuasar();
     const users = ref([]);
@@ -222,68 +231,13 @@ export default {
       skip: rowsPerPage.value * (currentPage.value - 1),
     });
 
-    const columns = [
-      {
-        name: "firstname",
-        label: "First Name",
-        field: "firstName",
-        align: "left",
-      },
-      {
-        name: "lastName",
-        label: "LastName",
-        field: "lastName",
-        align: "left",
-      },
-      {
-        name: "age",
-        label: "age",
-        field: "age",
-        align: "center",
-      },
-      {
-        name: "gender",
-        label: "gender",
-        field: "gender",
-        align: "center",
-      },
-      {
-        name: "email",
-        label: "Email",
-        field: "email",
-        align: "center",
-      },
-      {
-        name: "phone",
-        label: "Phone",
-        field: "phone",
-        align: "center",
-      },
-      {
-        name: "height",
-        label: "Height",
-        field: "height",
-        align: "center",
-      },
-      {
-        name: "weight",
-        label: "Weight",
-        field: "weight",
-        align: "center",
-      },
-      {
-        name: "action",
-        label: "Action",
-        align: "center",
-      },
-    ];
-
     return {
       loading: ref(true),
       selectedMultipleUsers: ref([]),
       confirmDelete: ref(false),
       promptSearchUser: ref(false),
       searchUser: ref(""),
+      visibleColumns: ref(columns.map((item) => item.name)),
       quasarNotify,
       params,
       users,
@@ -296,78 +250,84 @@ export default {
       rowsPerPageOptions,
     };
   },
+
   mounted() {
     this.getData();
   },
+
   methods: {
     async getData() {
       this.loading = true;
-
+      let response;
       try {
-        console.log("nasd", this.params.q);
-        const response = await instanceAxios.request({
+        response = await instanceAxios.request({
           url: this.params.q == "" || !this.params.q ? "users" : "users/search",
           params: { ...this.params },
         });
-
-        this.$router.push({
-          query: { ...this.params },
-        });
-
-        if (response.data.users) {
-          this.users = response.data.users;
-        } else {
-          this.users = response.data;
-        }
-        if (response.data.total) {
-          this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
-        }
       } catch (error) {
-        this.quasarNotify.notify({
+        Notify.create({
           message: `${"Server Failed" || error.message}`,
           position: "top-right",
           type: "negative",
         });
+        return;
+      } finally {
+        this.loading = false;
       }
+      this.$router.push({
+        query: { ...this.params },
+      });
 
-      this.loading = false;
+      this.users = response.data.users || response.data;
+
+      if (response.data.total) {
+        this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
+      }
     },
+
     async handleDeleteUsers() {
       try {
         const response = await instanceAxios.delete(
           `/users/${this.currentUser.id}`
         );
-
-        const index = this.users.findIndex(
-          (user) => user.id == this.currentUser.id
-        );
-        this.users.splice(index, 1);
-        this.confirmDelete = false;
-        this.currentUser = [];
-
-        this.quasarNotify.notify({
-          message: "Delete Successfully",
-          position: "top-right",
-          type: "positive",
-        });
       } catch (error) {
-        console.log(error);
-        this.quasarNotify.notify({
+        Notify.create({
           message: `${error.response?.data.message || error.message}`,
           position: "top-right",
           type: "negative",
         });
+        return;
       }
+
+      const index = this.users.findIndex(
+        (user) => user.id == this.currentUser.id
+      );
+      this.users.splice(index, 1);
+      this.confirmDelete = false;
+      this.currentUser = [];
+
+      Notify.create({
+        message: "Delete Successfully",
+        position: "top-right",
+        type: "positive",
+      });
     },
+
     openConfirmDeleteDialog(user) {
       this.confirmDelete = true;
       this.currentUser = user;
     },
+
     async handleSearchUser() {
       this.params.q = this.searchUser.trim();
       this.getData();
     },
+
     hanldeFilter() {},
   },
 };
 </script>
+
+<style>
+@import "style.sass";
+</style>
