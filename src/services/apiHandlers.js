@@ -1,9 +1,25 @@
 import { Notify } from "quasar";
 import instanceAxios from "src/axios-instance";
 
-async function handleAPICreate() {}
-async function handleAPIUpdate() {}
-async function handleAPIGet() {}
+async function handleAPICreate(endpoint, data, successMsg, failMsg) {}
+async function handleAPIUpdate(endpoint, data, successMsg, failMsg) {}
+async function handleAPIGet(endpoint, params, failMsg) {
+  try {
+    const response = await instanceAxios.request({
+      url: endpoint,
+      params: { ...params },
+    });
+    return response;
+  } catch (error) {
+    Notify.create({
+      message: `${failMsg || error.message}`,
+      position: "top-right",
+      type: "negative",
+    });
+    return;
+  }
+}
+
 async function handleAPIDelete(endpoint, successMsg, failMsg) {
   try {
     const response = await instanceAxios.delete(endpoint);
@@ -23,9 +39,4 @@ async function handleAPIDelete(endpoint, successMsg, failMsg) {
   });
 }
 
-export {
-  handleAPIDelete,
-  handleAPICreate,
-  handleAPIGet,
-  handleAPIUpdate,
-};
+export { handleAPIDelete, handleAPICreate, handleAPIGet, handleAPIUpdate };

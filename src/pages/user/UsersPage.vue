@@ -128,12 +128,7 @@
               flat
               color="grey"
               active-color="primary"
-              @update:model-value="
-                () => {
-                  params.skip = rowsPerPage * (currentPage - 1);
-                  getData();
-                }
-              "
+              @update:model-value="handleChangePage"
             />
           </div>
           <div class="col-2 row justify-end">
@@ -144,13 +139,7 @@
               outlined
               options-dense
               class="row"
-              @update:model-value="
-                () => {
-                  currentPage = 1;
-                  params.limit = rowsPerPage;
-                  getData();
-                }
-              "
+              @update:model-value="handleChangeRowsPerPage"
             >
               <template v-slot:before>
                 <div class="text-subtitle2 text-weight-bold">
@@ -178,13 +167,10 @@
 <script>
 import { Notify, useQuasar } from "quasar";
 import { ref } from "vue";
-import instanceAxios from "src/axios-instance";
 import columns from "./columns";
 import TableSkeleton from "src/components/TableSkeleton.vue";
 import ConfirmDialog from "src/components/ConfirmDialog.vue";
-import { handleAPIDelete } from "src/services/apiHandlers";
-
-
+import { handleAPIDelete, handleAPIGet } from "src/services/apiHandlers";
 
 export default {
   name: "UserPage",
@@ -238,23 +224,13 @@ export default {
 
   methods: {
     async getData() {
-      this.loading = true;
-      let response;
-      try {
-        response = await instanceAxios.request({
-          url: this.params.q == "" || !this.params.q ? "users" : "users/search",
-          params: { ...this.params },
-        });
-      } catch (error) {
-        Notify.create({
-          message: `${"Server Failed" || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-        return;
-      } finally {
-        this.loading = false;
-      }
+      const endpoint =
+        this.params.q == "" || !this.params.q ? "users" : "users/search";
+      const failMsg = "Server Failed";
+
+      const response = await handleAPIGet(endpoint, this.params, failMsg);
+
+      this.loading = false;
       this.$router.push({
         query: { ...this.params },
       });
@@ -265,7 +241,11 @@ export default {
     },
 
     async handleDeleteUsers() {
-      handleAPIDelete( `/users/${this.currentUser.id}`, 'Delete Success ', 'Delete Fail' )
+      await handleAPIDelete(
+        `/users/${this.currentUser.id}`,
+        "Delete Success ",
+        "Delete Fail"
+      );
 
       const index = this.users.findIndex(
         (user) => user.id == this.currentUser.id
@@ -285,7 +265,18 @@ export default {
       this.getData();
     },
 
-    hanldeFilter() {},
+    handleChangeRowsPerPage() {},
+
+    hanldeFilter() {
+      this.currentPage = 1;
+      this.params.limit = this.rowsPerPage;
+      this.getData();
+    },
+
+    handleChangePage() {
+      this.params.skip = this.rowsPerPage * (this.currentPage - 1);
+      this.getData();
+    },
   },
 };
 </script>
