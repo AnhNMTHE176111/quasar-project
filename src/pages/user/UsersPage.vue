@@ -69,8 +69,6 @@
       </div>
     </div>
 
-    <TableSkeleton :loading="loading" />
-
     <q-table
       class="my-table"
       title="Users"
@@ -166,27 +164,6 @@
     </q-table>
   </div>
 
-  <!-- <q-dialog v-model="confirmDelete" persistent>
-    <q-card>
-      <q-card-section class="row items-center">
-        <span class="q-ml-sm"
-          >Do you want to delete User with ID: {{ currentUser.id }}?
-        </span>
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="primary" v-close-popup />
-        <q-btn
-          flat
-          label="Delete"
-          color="danger"
-          @click="handleDeleteUsers()"
-          v-close-popup
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog> -->
-
   <ConfirmDialog
     v-model="confirmDelete"
     :confirm="confirmDelete"
@@ -194,6 +171,8 @@
     btnTitle="Delete"
     @handleConfirm="handleDeleteUsers()"
   />
+
+  <TableSkeleton :loading="loading" />
 </template>
 
 <script>
@@ -203,17 +182,19 @@ import instanceAxios from "src/axios-instance";
 import columns from "./columns";
 import TableSkeleton from "src/components/TableSkeleton.vue";
 import ConfirmDialog from "src/components/ConfirmDialog.vue";
+import { handleAPIDelete } from "src/services/apiHandlers";
+
+
 
 export default {
   name: "UserPage",
 
-  components: { TableSkeleton, TableSkeleton, ConfirmDialog },
+  components: { TableSkeleton, ConfirmDialog },
 
   setup() {
     const quasarNotify = useQuasar();
     const users = ref([]);
     const currentUser = ref([]);
-
     const rowsPerPageOptions = ref([5, 10, 15, 20]);
 
     // pagination
@@ -277,27 +258,14 @@ export default {
       this.$router.push({
         query: { ...this.params },
       });
-
       this.users = response.data.users || response.data;
-
       if (response.data.total) {
         this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
       }
     },
 
     async handleDeleteUsers() {
-      try {
-        const response = await instanceAxios.delete(
-          `/users/${this.currentUser.id}`
-        );
-      } catch (error) {
-        Notify.create({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-        return;
-      }
+      handleAPIDelete( `/users/${this.currentUser.id}`, 'Delete Success ', 'Delete Fail' )
 
       const index = this.users.findIndex(
         (user) => user.id == this.currentUser.id
@@ -305,12 +273,6 @@ export default {
       this.users.splice(index, 1);
       this.confirmDelete = false;
       this.currentUser = [];
-
-      Notify.create({
-        message: "Delete Successfully",
-        position: "top-right",
-        type: "positive",
-      });
     },
 
     openConfirmDeleteDialog(user) {

@@ -456,12 +456,14 @@ export default {
       this.hanldeChangeData(this.convertToAPI());
       this.getAllCategories();
     },
+    
     async getAllCategories() {
       const responseCategories = await instanceAxios.get(
         PRODUCT_CATEGORIES_API
       );
       this.categories = await responseCategories.data;
     },
+    
     getValueCell(field, row) {
       if (field == "isDeleted") {
         if (row[field] === true) {
@@ -472,10 +474,12 @@ export default {
       }
       return row[field];
     },
+    
     openConfirmDeleteDialog(id) {
       this.confirmDelete = true;
       this.currentProductId = id;
     },
+    
     async handleDeleteProduct() {
       let response;
 
@@ -514,6 +518,7 @@ export default {
         });
       }
     },
+    
     async hanldeCreateProduct(product) {
       let response;
       try {
@@ -546,6 +551,7 @@ export default {
         });
       }
     },
+    
     async hanldeUpdateProduct(product) {
       const { id, ...updateObject } = product;
       updateObject.rating = parseFloat(updateObject.rating);
@@ -581,6 +587,7 @@ export default {
         });
       }
     },
+    
     async hanldeBulkPricing(updatePrice, updateDiscount) {
       console.log("updatePrice", updatePrice);
       console.log("updateDiscount", updateDiscount);
@@ -626,32 +633,39 @@ export default {
         });
       }
     },
+    
     showCreateDialog() {
       this.typeOfDialog = "create";
       this.createProductDialog = true;
       this.currentUpdateProduct = [];
     },
+    
     showUpdateDialog(proID) {
       const product = this.products.filter((p) => p.id == proID)[0];
       this.typeOfDialog = "update";
       this.currentUpdateProduct = { ...product };
       this.createProductDialog = true;
     },
+    
     showViewingProductDialog(proID) {
       const product = this.products.filter((p) => p.id == proID)[0];
       this.productViewing = { ...product };
       this.showViewProduct = true;
     },
+    
     openProductUpdateDialog(id) {
       this.showUpdateDialog(id);
     },
+    
     ShowSth() {
       this.showPricingDialog = true;
     },
+    
     resetCategory() {
       this.chooseCategory = "";
       this.products = this.productsDataRaw.products;
     },
+    
     filterFormReset() {
       this.priceFrom = "";
       this.priceTo = "";
@@ -659,6 +673,7 @@ export default {
       this.resetCategory();
       this.hanldeChangeData(this.convertToAPI());
     },
+    
     filterFormSubmit() {
       if (
         parseInt(this.priceTo) <= parseInt(this.priceFrom) &&
@@ -682,13 +697,16 @@ export default {
         this.hanldeChangeData(this.convertToAPI());
       }
     },
+    
     handleSearchProduct() {
       this.searchValue = this.searchValue.trim().split(/\s+/g).join(" ");
       this.hanldeChangeData(this.convertToAPI());
     },
+    
     async handleFilterByCategory() {
       this.hanldeChangeData(this.convertToAPI());
     },
+    
     selectedAllProducts() {
       if (this.selectedAll) {
         this.products.map((item) => this.selectedProduct.push(item.id));
@@ -697,6 +715,7 @@ export default {
         this.selectedProduct = [];
       }
     },
+    
     async hanldeChangePage(api) {
       this.loading = true;
 
@@ -734,6 +753,7 @@ export default {
 
       this.loading = false;
     },
+    
     async hanldeChangeData(api) {
       this.loading = true;
       let responseProducts = await instanceAxios.get(api);
@@ -755,9 +775,11 @@ export default {
       );
       this.loading = false;
     },
+    
     show(a) {
       console.log("a", a);
     },
+    
     convertToAPI() {
       let searchText = "";
       let categoryText = "";
@@ -785,6 +807,7 @@ export default {
       }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
       return apiText;
     },
+    
   },
 };
 </script>
