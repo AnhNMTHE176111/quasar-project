@@ -62,7 +62,7 @@
               class="q-ma-md"
               icon="add"
               color="blue"
-              @click="() => (showCreateDialog = true)"
+              @click="() => (showCreateUserDialog = true)"
             />
           </div>
         </div>
@@ -105,13 +105,19 @@
       <template v-slot:body-cell-action="props">
         <q-td>
           <div class="row justify-center q-gutter-md" style="width: 100px">
-            <q-btn flat dense icon="edit" color="primary" />
+            <q-btn
+              flat
+              dense
+              icon="edit"
+              color="primary"
+              @click="handleShowDetailUserDialog(props.row)"
+            />
             <q-btn
               flat
               dense
               icon="delete"
               color="negative"
-              @click="openConfirmDeleteDialog(props.row)"
+              @click="handleShowConfirmDeleteDialog(props.row)"
             />
           </div>
         </q-td>
@@ -158,24 +164,33 @@
     :confirm="confirmDelete"
     :title="`Do you want to delete User with ID: ${currentUser.id}?`"
     btnTitle="Delete"
-    @handleConfirm="handleDeleteUsers()"
+    @handleConfirm="handleDeleteUser()"
+  />
+
+  <UserTemplateDialog
+    v-model="showDetailUserDialog"
+    :showPopup="showDetailUserDialog"
+    :currentUser="currentUser"
+    btnSubmit="Submit"
+    @handleSubmit="handleUpdateUser"
   />
 
   <TableSkeleton :loading="loading" />
 </template>
 
 <script>
-import { Notify, useQuasar } from "quasar";
+import { useQuasar } from "quasar";
 import { ref } from "vue";
 import columns from "./columns";
 import TableSkeleton from "src/components/TableSkeleton.vue";
 import ConfirmDialog from "src/components/ConfirmDialog.vue";
 import { handleAPIDelete, handleAPIGet } from "src/services/apiHandlers";
+import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 
 export default {
   name: "UserPage",
 
-  components: { TableSkeleton, ConfirmDialog },
+  components: { TableSkeleton, ConfirmDialog, UserTemplateDialog },
 
   setup() {
     const quasarNotify = useQuasar();
@@ -215,6 +230,8 @@ export default {
       pagination,
       columns,
       rowsPerPageOptions,
+      showCreateUserDialog: ref(false),
+      showDetailUserDialog: ref(false),
     };
   },
 
@@ -240,7 +257,7 @@ export default {
       }
     },
 
-    async handleDeleteUsers() {
+    async handleDeleteUser() {
       await handleAPIDelete(
         `/users/${this.currentUser.id}`,
         "Delete Success ",
@@ -255,9 +272,20 @@ export default {
       this.currentUser = [];
     },
 
-    openConfirmDeleteDialog(user) {
+    async handleUpdateUser() {},
+
+    handleShowConfirmDeleteDialog(user) {
       this.confirmDelete = true;
       this.currentUser = user;
+    },
+
+    handleShowCreateUserDialog() {},
+
+    handleShowDetailUserDialog(user) {
+      console.log('user', user);
+      this.showDetailUserDialog = true;
+      Object.assign(this.currentUser, user)
+      console.log('current User', this.currentUser);
     },
 
     async handleSearchUser() {

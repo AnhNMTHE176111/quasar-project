@@ -269,6 +269,7 @@
     :currentDetailCart="currentDetailCart"
     @showUpdateDialog="handleShowUpdateDialog(currentDetailCart)"
   />
+
 </template>
 
 <script>
@@ -296,25 +297,6 @@ export default {
     // table
     const loading = ref(true);
     const rowsPerPageOptions = ref([5, 10, 15, 20]);
-
-    // filter
-    const totalFilter = ref({
-      min: 0,
-      max: 5000,
-    });
-    const rangeTotal = totalFilter.value.max - totalFilter.value.min;
-    const discountedTotalFilter = ref({
-      min: 0,
-      max: 5000,
-    });
-    const rangeDiscountedTotalFilter =
-      discountedTotalFilter.value.max - discountedTotalFilter.value.min;
-    const totalQuantityFilter = ref({
-      min: 0,
-      max: 100,
-    });
-    const rangeTotalQuantityFilter =
-      totalQuantityFilter.value.max - totalQuantityFilter.value.min;
 
     // pagination
     const currentPage = ref(1);
@@ -399,7 +381,7 @@ export default {
       rangeTotal,
       rangeTotalQuantityFilter,
       filter,
-      currentDetailCart: ref([]),
+      currentDetailCart: ref({}),
     };
   },
 

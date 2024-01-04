@@ -94,6 +94,7 @@
                     :src="product.thumbnail"
                     spinner-color="white"
                     style="height: 140px; max-width: 150px"
+                    alt=""
                   />
                 </q-item-section>
                 <q-item-section>
@@ -137,7 +138,7 @@
                 </q-item-section>
                 <q-item-section avatar side>
                   <q-btn dense @click="removeSelectedProduct(product)">
-                    <q-icon name="delete" color="red" />
+                    <q-icon name="deconste" color="red" />
                   </q-btn>
                 </q-item-section>
               </q-item>
@@ -215,6 +216,7 @@ export default {
     showPopup: Boolean,
     currentUpdateCart: Object,
   },
+
   setup() {
     const selectedProducts = ref([]);
     // total
@@ -249,35 +251,40 @@ export default {
       }),
     };
   },
+
   methods: {
     async handleSearchProduct() {
-      let value = this.searchValue.trim().split(/\s+/g).join(" ");
+      const value = this.searchValue.trim().split(/\s+/g).join(" ");
       if (value == "") {
         this.productsShowing = [];
       } else if (value != this.oldSearchValue) {
         this.loading = true;
         clearTimeout(this.timeout);
         this.timeout = setTimeout(async () => {
-          let response = await instanceAxios(`/products/search?q=${value}`);
+          const response = await instanceAxios(`/products/search?q=${value}`);
           this.productsShowing = [...response.data.products];
           this.oldSearchValue = value;
           this.loading = false;
-        }, 700);
+        },
+         700);
       }
     },
+
     addSelectedProduct(product) {
-      let index = this.selectedProducts.findIndex((p) => p.id == product.id);
+      const index = this.selectedProducts.findIndex((p) => p.id == product.id);
       if (index == -1) {
         product.quantity = 1;
         this.selectedProducts.push(product);
         this.updateTotal();
       }
     },
+
     removeSelectedProduct(product) {
-      let index = this.selectedProducts.findIndex((p) => p.id == product.id);
+      const index = this.selectedProducts.findIndex((p) => p.id == product.id);
       this.selectedProducts.splice(index, 1);
       this.updateTotal();
     },
+
     updateTotal() {
       this.resetTotal();
       this.selectedProducts.map((p) => {
@@ -292,12 +299,14 @@ export default {
       });
       this.totalProduct = this.selectedProducts.length;
     },
+
     resetTotal() {
       this.totalQuantity = 0;
       this.totalDiscount = 0;
       this.total = 0;
       this.totalProduct = 0;
     },
+
     cancelDialog() {
       this.searchValue = "";
       this.oldSearchValue = "";
@@ -306,16 +315,19 @@ export default {
       this.resetTotal();
       this.userId = 0;
     },
+
     handleSubmitForm() {
       this.productsShowing = [];
       this.searchValue = "";
       this.$emit("updateCart", cart);
     },
+
     handleResetForm() {
       this.productsShowing = [];
       this.searchValue = "";
       this.updateTotal();
     },
+
     async getData() {
       try {
         const response = await instanceAxios.get(`/cart/${this.cartId}`);
@@ -326,7 +338,9 @@ export default {
       } catch (error) {}
       this.updateTotal();
     },
+
   },
+
   watch: {
     currentUpdateCart(newVal, oldVal) {
       if (newVal.id) {
@@ -334,6 +348,8 @@ export default {
         this.getData();
       }
     },
+
   },
+
 };
 </script>

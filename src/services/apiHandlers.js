@@ -1,8 +1,8 @@
 import { Notify } from "quasar";
 import instanceAxios from "src/axios-instance";
 
-async function handleAPICreate(endpoint, data, successMsg, failMsg) {}
-async function handleAPIUpdate(endpoint, data, successMsg, failMsg) {}
+async function handleAPICreate() {}
+async function handleAPIUpdate() {}
 async function handleAPIGet(endpoint, params, failMsg) {
   try {
     const response = await instanceAxios.request({
@@ -22,7 +22,7 @@ async function handleAPIGet(endpoint, params, failMsg) {
 
 async function handleAPIDelete(endpoint, successMsg, failMsg) {
   try {
-    const response = await instanceAxios.delete(endpoint);
+    await instanceAxios.delete(endpoint);
   } catch (error) {
     Notify.create({
       message: `${error.response?.data.message || error.message}` || failMsg,
