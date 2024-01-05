@@ -3,12 +3,12 @@
     <q-card style="width: 80vw; max-width: 90vw" class="q-pa-sm">
       <q-card-section class="row q-gutter-sm">
         <div class="col-4">
-          <div class="text-h4">User Detail {{ user }}</div>
+          <div class="text-h4">User Detail</div>
 
-          <!-- <q-card-section>
+          <q-card-section>
             <q-img
               :src="user.image"
-              spinner-color="white"
+              loading
               style="height: 100px; max-width: 100px"
             />
           </q-card-section>
@@ -70,10 +70,10 @@
                 label="EIN"
               />
             </div>
-          </q-card-section> -->
+          </q-card-section>
         </div>
 
-        <!-- <div class="col-7">
+        <div class="col-7">
           <q-card-section class="q-gutter-xs">
             <div class="text-h6">Physical Attributes</div>
             <div class="row q-gutter-md q-mb-sm">
@@ -316,7 +316,7 @@
               />
             </div>
           </q-card-section>
-        </div> -->
+        </div>
       </q-card-section>
 
       <q-card-section>
@@ -349,8 +349,11 @@ import { ref } from "vue";
 
 export default {
   name: "UserTemplateDialog",
+
   emits: ["handleSubmit"],
+
   props: { showPopup: Boolean, currentUser: Object, btnSubmit: String },
+
   setup() {
     const user = ref();
 
@@ -360,12 +363,13 @@ export default {
       genderOptions: ref(["male", "female"]),
     };
   },
+
   watch: {
     currentUser(newVal, oldVal) {
-      console.log('newVal', newVal);
       this.user = newVal;
       this.user.fullname = this.user.firstName + " " + this.user.lastName;
     },
   },
+
 };
 </script>

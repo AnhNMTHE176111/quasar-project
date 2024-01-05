@@ -80,6 +80,7 @@
       :loading="loading"
       :visible-columns="visibleColumns"
       virtual-scroll
+      v-if="!loading"
     >
       <template v-slot:top="">
         <div class="col-2 q-table__title">Users</div>
@@ -245,9 +246,10 @@ export default {
         this.params.q == "" || !this.params.q ? "users" : "users/search";
       const failMsg = "Server Failed";
 
+      this.loading = true
       const response = await handleAPIGet(endpoint, this.params, failMsg);
-
       this.loading = false;
+
       this.$router.push({
         query: { ...this.params },
       });
@@ -282,10 +284,8 @@ export default {
     handleShowCreateUserDialog() {},
 
     handleShowDetailUserDialog(user) {
-      console.log('user', user);
       this.showDetailUserDialog = true;
-      Object.assign(this.currentUser, user)
-      console.log('current User', this.currentUser);
+      this.currentUser = user;
     },
 
     async handleSearchUser() {
