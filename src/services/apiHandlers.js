@@ -1,8 +1,34 @@
 import { Notify } from "quasar";
 import instanceAxios from "src/axios-instance";
 
+function showNotify(option) {
+  const defaultNotify = {
+    message: "",
+    position: "top-right",
+    type: "positive",
+    ...option,
+  };
+  Notify.create(defaultNotify);
+}
+
 async function handleAPICreate() {}
-async function handleAPIUpdate() {}
+
+async function handleAPIUpdate(endpoint, data, successMsg, failMsg) {
+  try {
+    const response = await instanceAxios.put(endpoint, { ...data });
+    showNotify({ message: `${successMsg}` });
+
+    return response;
+  } catch (error) {
+    const notify = {
+      message: `${failMsg || error.message}`,
+      type: "negative",
+    };
+    showNotify(notify);
+    return;
+  }
+}
+
 async function handleAPIGet(endpoint, params, failMsg) {
   try {
     const response = await instanceAxios.request({
@@ -11,11 +37,11 @@ async function handleAPIGet(endpoint, params, failMsg) {
     });
     return response;
   } catch (error) {
-    Notify.create({
+    const notify = {
       message: `${failMsg || error.message}`,
-      position: "top-right",
       type: "negative",
-    });
+    };
+    showNotify(notify);
     return;
   }
 }
@@ -24,19 +50,15 @@ async function handleAPIDelete(endpoint, successMsg, failMsg) {
   try {
     await instanceAxios.delete(endpoint);
   } catch (error) {
-    Notify.create({
+    const notify = {
       message: `${error.response?.data.message || error.message}` || failMsg,
-      position: "top-right",
       type: "negative",
-    });
+    };
+    showNotify(notify);
     return;
   }
 
-  Notify.create({
-    message: successMsg,
-    position: "top-right",
-    type: "positive",
-  });
+  showNotify({ message: successMsg });
 }
 
 export { handleAPIDelete, handleAPICreate, handleAPIGet, handleAPIUpdate };

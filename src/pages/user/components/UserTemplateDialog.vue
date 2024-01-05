@@ -14,7 +14,7 @@
           </q-card-section>
 
           <q-card-section class="q-gutter-md">
-            <q-input dense outlined v-model="user.fullname" label="Full Name" />
+            <q-input dense outlined v-model="user.fullName" label="Full Name" />
             <q-input dense outlined v-model="user.email" label="Email" />
             <q-input dense outlined v-model="user.phone" label="Phone" />
 
@@ -367,7 +367,7 @@ export default {
   watch: {
     currentUser(newVal, oldVal) {
       this.user = newVal;
-      this.user.fullname = this.user.firstName + " " + this.user.lastName;
+      this.user.fullName = this.user.firstName + " " + this.user.lastName;
     },
   },
 

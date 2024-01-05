@@ -185,7 +185,11 @@ import { ref } from "vue";
 import columns from "./columns";
 import TableSkeleton from "src/components/TableSkeleton.vue";
 import ConfirmDialog from "src/components/ConfirmDialog.vue";
-import { handleAPIDelete, handleAPIGet } from "src/services/apiHandlers";
+import {
+  handleAPIDelete,
+  handleAPIGet,
+  handleAPIUpdate,
+} from "src/services/apiHandlers";
 import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 
 export default {
@@ -246,7 +250,7 @@ export default {
         this.params.q == "" || !this.params.q ? "users" : "users/search";
       const failMsg = "Server Failed";
 
-      this.loading = true
+      this.loading = true;
       const response = await handleAPIGet(endpoint, this.params, failMsg);
       this.loading = false;
 
@@ -274,7 +278,29 @@ export default {
       this.currentUser = [];
     },
 
-    async handleUpdateUser() {},
+    async handleUpdateUser() {
+      // handle update name
+      const nameArray = this.currentUser.fullName.trim().split(/\s+/);
+      const firstName = nameArray[0];
+      nameArray.shift()
+      const lastName = nameArray.join(" ");
+      this.currentUser.firstName = firstName;
+      this.currentUser.lastName = lastName;
+
+      // update user
+      const response = await handleAPIUpdate(
+        `users/${this.currentUser.id}`,
+        this.currentUser,
+        "Update Successfully",
+        "Update Fail"
+      );
+
+      // assign value to table
+      const updatedUser = response.data;
+      this.showDetailUserDialog = false;
+      const foundUser = this.users.filter((u) => u.id == updatedUser.id)[0];
+      Object.assign(foundUser, updatedUser);
+    },
 
     handleShowConfirmDeleteDialog(user) {
       this.confirmDelete = true;
@@ -283,9 +309,14 @@ export default {
 
     handleShowCreateUserDialog() {},
 
-    handleShowDetailUserDialog(user) {
+    async handleShowDetailUserDialog(user) {
+      const foundUser = await handleAPIGet(
+        `users/${user.id}`,
+        "",
+        "Cannot Get User"
+      );
       this.showDetailUserDialog = true;
-      this.currentUser = user;
+      this.currentUser = foundUser.data;
     },
 
     async handleSearchUser() {
@@ -293,13 +324,13 @@ export default {
       this.getData();
     },
 
-    handleChangeRowsPerPage() {},
-
-    hanldeFilter() {
+    handleChangeRowsPerPage() {
       this.currentPage = 1;
       this.params.limit = this.rowsPerPage;
       this.getData();
     },
+
+    hanldeFilter() {},
 
     handleChangePage() {
       this.params.skip = this.rowsPerPage * (this.currentPage - 1);
