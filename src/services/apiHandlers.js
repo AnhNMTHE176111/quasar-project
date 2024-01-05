@@ -11,7 +11,21 @@ function showNotify(option) {
   Notify.create(defaultNotify);
 }
 
-async function handleAPICreate() {}
+async function handleAPICreate(endpoint, data, successMsg, failMsg) {
+  try {
+    const response = await instanceAxios.post(endpoint, { ...data });
+    showNotify({ message: `${successMsg}` });
+
+    return response;
+  } catch (error) {
+    const notify = {
+      message: `${failMsg || error.message}`,
+      type: "negative",
+    };
+    showNotify(notify);
+    return;
+  }
+}
 
 async function handleAPIUpdate(endpoint, data, successMsg, failMsg) {
   try {

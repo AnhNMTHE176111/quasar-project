@@ -374,12 +374,7 @@ export default {
       promptSearchCart: ref(false),
       searchCart: ref(0),
       currentUpdateCart: ref([]),
-      totalFilter,
-      discountedTotalFilter,
-      totalQuantityFilter,
-      rangeDiscountedTotalFilter,
-      rangeTotal,
-      rangeTotalQuantityFilter,
+      
       filter,
       currentDetailCart: ref({}),
     };

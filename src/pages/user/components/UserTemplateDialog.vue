@@ -1,10 +1,14 @@
 <template>
   <q-dialog v-model="show">
     <q-card style="width: 80vw; max-width: 90vw" class="q-pa-sm">
-      <q-card-section class="row q-gutter-sm">
-        <div class="col-4">
-          <div class="text-h4">User Detail</div>
+      <q-card-section>
+        <div class="text-h5">User Detail</div>
+      </q-card-section>
 
+      <q-separator />
+
+      <q-card-section class="row q-gutter-sm justify-around">
+        <div class="col-4">
           <q-card-section>
             <q-img
               :src="user.image"
@@ -26,9 +30,9 @@
               type="date"
             />
 
-            <div class="row q-gutter-x-xs">
+            <div class="row justify-between">
               <q-select
-                class="col"
+                class="col-6"
                 dense
                 outlined
                 v-model="user.gender"
@@ -36,7 +40,7 @@
                 label="Gender"
               />
               <q-input
-                class="col"
+                class="col-5"
                 type="number"
                 dense
                 outlined
@@ -54,17 +58,17 @@
               label="University"
             />
 
-            <div class="row q-gutter-x-xs">
+            <div class="row justify-between">
               <q-input
                 dense
-                class="col"
+                class="col-6"
                 outlined
                 v-model="user.ssn"
                 label="SSN"
               />
               <q-input
                 dense
-                class="col"
+                class="col-5"
                 outlined
                 v-model="user.ein"
                 label="EIN"
@@ -328,6 +332,7 @@
               icon="cancel"
               label="Cancel"
               class="q-ma-sm"
+              @click="resetDialog()"
               v-close-popup
             />
             <q-btn
@@ -335,7 +340,7 @@
               icon="check"
               :label="btnSubmit"
               class="q-ma-sm"
-              @click="$emit('handleSubmit', user)"
+              @click="handleSubmit(user)"
             />
           </q-item>
         </div>
@@ -346,16 +351,22 @@
 
 <script>
 import { ref } from "vue";
+import createUserStructure from "../userStructure";
 
 export default {
   name: "UserTemplateDialog",
 
   emits: ["handleSubmit"],
 
-  props: { showPopup: Boolean, currentUser: Object, btnSubmit: String },
+  props: {
+    showPopup: Boolean,
+    currentUser: Object,
+    btnSubmit: String,
+    isCreate: Boolean,
+  },
 
   setup() {
-    const user = ref();
+    const user = createUserStructure();
 
     return {
       show: ref(true),
@@ -364,12 +375,24 @@ export default {
     };
   },
 
-  watch: {
-    currentUser(newVal, oldVal) {
-      this.user = newVal;
-      this.user.fullName = this.user.firstName + " " + this.user.lastName;
+  methods: {
+    resetDialog() {
+      this.user = createUserStructure();
+    },
+
+    handleSubmit(user) {
+      this.$emit("handleSubmit", user);
+      this.resetDialog()
     },
   },
 
+  watch: {
+    currentUser(newVal, oldVal) {
+      if (!this.$props.isCreate) {
+        this.user = newVal;
+        this.user.fullName = this.user.firstName + " " + this.user.lastName;
+      }
+    },
+  },
 };
 </script>

@@ -168,12 +168,22 @@
     @handleConfirm="handleDeleteUser()"
   />
 
+  <!-- update dialog -->
   <UserTemplateDialog
     v-model="showDetailUserDialog"
     :showPopup="showDetailUserDialog"
     :currentUser="currentUser"
     btnSubmit="Submit"
     @handleSubmit="handleUpdateUser"
+  />
+
+  <!-- create dialog -->
+  <UserTemplateDialog
+    v-model="showCreateUserDialog"
+    :showPopup="showCreateUserDialog"
+    btnSubmit="Create"
+    :isCreate="true"
+    @handleSubmit="handleCreateUser"
   />
 
   <TableSkeleton :loading="loading" />
@@ -189,6 +199,7 @@ import {
   handleAPIDelete,
   handleAPIGet,
   handleAPIUpdate,
+  handleAPICreate,
 } from "src/services/apiHandlers";
 import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 
@@ -235,8 +246,8 @@ export default {
       pagination,
       columns,
       rowsPerPageOptions,
-      showCreateUserDialog: ref(false),
       showDetailUserDialog: ref(false),
+      showCreateUserDialog: ref(false),
     };
   },
 
@@ -280,12 +291,7 @@ export default {
 
     async handleUpdateUser() {
       // handle update name
-      const nameArray = this.currentUser.fullName.trim().split(/\s+/);
-      const firstName = nameArray[0];
-      nameArray.shift()
-      const lastName = nameArray.join(" ");
-      this.currentUser.firstName = firstName;
-      this.currentUser.lastName = lastName;
+      this.handleCustomName(this.currentUser)
 
       // update user
       const response = await handleAPIUpdate(
@@ -300,6 +306,14 @@ export default {
       this.showDetailUserDialog = false;
       const foundUser = this.users.filter((u) => u.id == updatedUser.id)[0];
       Object.assign(foundUser, updatedUser);
+      this.currentUser = [];
+    },
+
+    async handleCreateUser(user) {
+      this.handleCustomName(user)
+      const response = await handleAPICreate("users/add", user, "Create Successfully", "Create Fail");
+      this.users.unshift(response.data)
+      this.showCreateUserDialog = false
     },
 
     handleShowConfirmDeleteDialog(user) {
@@ -307,7 +321,9 @@ export default {
       this.currentUser = user;
     },
 
-    handleShowCreateUserDialog() {},
+    handleShowCreateUserDialog() {
+      this.showCreateUserDialog = true;
+    },
 
     async handleShowDetailUserDialog(user) {
       const foundUser = await handleAPIGet(
@@ -315,8 +331,8 @@ export default {
         "",
         "Cannot Get User"
       );
+      this.currentUser = foundUser.data || user;
       this.showDetailUserDialog = true;
-      this.currentUser = foundUser.data;
     },
 
     async handleSearchUser() {
@@ -324,18 +340,27 @@ export default {
       this.getData();
     },
 
+    hanldeFilter() {},
+
     handleChangeRowsPerPage() {
       this.currentPage = 1;
       this.params.limit = this.rowsPerPage;
       this.getData();
     },
 
-    hanldeFilter() {},
-
     handleChangePage() {
       this.params.skip = this.rowsPerPage * (this.currentPage - 1);
       this.getData();
     },
+
+    handleCustomName(object) {
+      const nameArray = object.fullName.trim().split(/\s+/);
+      const firstName = nameArray[0];
+      nameArray.shift();
+      const lastName = nameArray.join(" ");
+      object.firstName = firstName;
+      object.lastName = lastName;
+    }
   },
 };
 </script>
