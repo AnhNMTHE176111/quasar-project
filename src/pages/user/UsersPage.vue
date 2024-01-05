@@ -33,14 +33,15 @@
           <form @submit.prevent="hanldeFilter" class="col-12">
             <div class="q-pa-md">
               <div class="col-12 row justify-end">
-                <!-- <q-select
+                <!-- Cart -->
+                <q-select
                   filled
                   dense
                   v-model="model"
                   use-input
                   input-debounce="0"
-                  label="Simple filter"
-                  :options="options"
+                  label="Cart filter"
+                  :options="['abc', 'xyz']"
                   @filter="filterFn"
                   style="width: 250px"
                 >
@@ -51,7 +52,8 @@
                       </q-item-section>
                     </q-item>
                   </template>
-                </q-select> -->
+                </q-select>
+
               </div>
             </div>
           </form>
@@ -248,6 +250,10 @@ export default {
       rowsPerPageOptions,
       showDetailUserDialog: ref(false),
       showCreateUserDialog: ref(false),
+      filterFn(val, update) {
+        console.log(val);
+        console.log('update', update);
+      }
     };
   },
 
@@ -291,7 +297,7 @@ export default {
 
     async handleUpdateUser() {
       // handle update name
-      this.handleCustomName(this.currentUser)
+      this.handleCustomName(this.currentUser);
 
       // update user
       const response = await handleAPIUpdate(
@@ -310,10 +316,15 @@ export default {
     },
 
     async handleCreateUser(user) {
-      this.handleCustomName(user)
-      const response = await handleAPICreate("users/add", user, "Create Successfully", "Create Fail");
-      this.users.unshift(response.data)
-      this.showCreateUserDialog = false
+      this.handleCustomName(user);
+      const response = await handleAPICreate(
+        "users/add",
+        user,
+        "Create Successfully",
+        "Create Fail"
+      );
+      this.users.unshift(response.data);
+      this.showCreateUserDialog = false;
     },
 
     handleShowConfirmDeleteDialog(user) {
@@ -360,7 +371,9 @@ export default {
       const lastName = nameArray.join(" ");
       object.firstName = firstName;
       object.lastName = lastName;
-    }
+    },
+
+
   },
 };
 </script>
