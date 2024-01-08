@@ -31,10 +31,9 @@
 </template>
 
 <script>
-import { ref } from "vue";
 
 export default {
-  name: "CartDetailDialog",
+  name: "TodoDetailDialog",
   props: {
     showPopup: Boolean,
     todos: Object,

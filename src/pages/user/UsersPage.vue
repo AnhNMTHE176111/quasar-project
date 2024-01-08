@@ -204,6 +204,11 @@
     :showPopup="showDetailTodoDialog"
     :todos="currentDetailTodo"
   />
+  <PostDetailDialog
+    v-model="showDetailPostDialog"
+    :showPopup="showDetailPostDialog"
+    :posts="currentDetailPost"
+  />
 
   <TableSkeleton :loading="loading" />
 </template>
@@ -217,6 +222,8 @@ import ConfirmDialog from "src/components/ConfirmDialog.vue";
 import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 import CartDetailDialog from "../cart/components/CartDetailDialog.vue";
 import QSelectInput from "./components/QSelectInput.vue";
+import TodoDetailDialog from "./components/TodoDetailDialog.vue";
+import PostDetailDialog from "./components/PostDetailDialog.vue";
 
 import {
   handleAPIDelete,
@@ -224,7 +231,6 @@ import {
   handleAPIUpdate,
   handleAPICreate,
 } from "src/services/apiHandlers";
-import TodoDetailDialog from "./components/TodoDetailDialog.vue";
 
 export default {
   name: "UserPage",
@@ -236,6 +242,7 @@ export default {
     CartDetailDialog,
     QSelectInput,
     TodoDetailDialog,
+    PostDetailDialog,
   },
 
   setup() {
@@ -457,11 +464,10 @@ export default {
               break;
             case "posts":
               this.showDetailPostDialog = true;
-              this.currentDetailPost = data[0];
+              this.currentDetailPost = data;
               break;
             case "todos":
               this.showDetailTodoDialog = true;
-              console.log('data', data);
               this.currentDetailTodo = data;
               break;
           }
