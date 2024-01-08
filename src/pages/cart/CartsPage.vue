@@ -10,6 +10,14 @@
               color="blue"
               @click="promptSearchCart = true"
             />
+            <!-- Search HERE -->
+            <QSelectInput
+              label="Cart of User"
+              :options="options"
+              :model="searchCart"
+              @filter="filterFn"
+              @update:model-value="handleSearchCart"
+            />
           </div>
         </div>
         <div class="col-7 justify-center">
@@ -269,7 +277,6 @@
     @showUpdateDialog="handleShowUpdateDialog(currentDetailCart)"
     :viewOnly="true"
   />
-
 </template>
 
 <script>
@@ -279,6 +286,9 @@ import AddNewCartDialog from "./components/AddNewCartDialog.vue";
 import UpdateCartDialog from "./components/UpdateCartDialog.vue";
 import CartDetailDialog from "./components/CartDetailDialog.vue";
 import instanceAxios from "src/axios-instance";
+import QSelectInput from "../user/components/QSelectInput.vue";
+import columns from "./columns";
+import { handleAPIGet } from "src/services/apiHandlers";
 
 export default {
   name: "CartsPage",
@@ -286,6 +296,7 @@ export default {
     CartDetailDialog,
     AddNewCartDialog,
     UpdateCartDialog,
+    QSelectInput,
   },
   setup() {
     const carts = ref([]);
@@ -307,53 +318,6 @@ export default {
       rowsNumber: rowsNumber.value,
     });
 
-    const columns = [
-      {
-        name: "cartID",
-        label: "Cart ID",
-        field: "id",
-        align: "center",
-      },
-      {
-        name: "userId",
-        label: "User ID",
-        field: "userId",
-        align: "center",
-      },
-      {
-        name: "totalProducts",
-        label: "Total Products",
-        field: "totalProducts",
-        align: "center",
-      },
-      {
-        name: "totalQuantity",
-        label: "Total Quantity",
-        field: "totalQuantity",
-        align: "center",
-      },
-      {
-        name: "total",
-        label: "Total",
-        field: "total",
-        align: "center",
-        format: (val, row) => val.toLocaleString("en-US"),
-      },
-      {
-        name: "discountedTotal",
-        label: "Discounted Total",
-        field: "discountedTotal",
-        align: "center",
-        format: (val, row) => val.toLocaleString("en-US"),
-      },
-
-      {
-        name: "action",
-        label: "Action",
-        align: "center",
-      },
-    ];
-
     return {
       carts,
       columns,
@@ -371,11 +335,11 @@ export default {
       showUpdateDialog: ref(false),
       showDetailDialog: ref(false),
       promptSearchCart: ref(false),
-      searchCart: ref(0),
+      searchCart: ref(null),
       currentUpdateCart: ref([]),
-
       filter,
       currentDetailCart: ref({}),
+      options: ref([]),
     };
   },
 
@@ -504,15 +468,16 @@ export default {
       }
     },
 
-    async handleSearchCart() {
+    async handleSearchCart(val) {
       try {
         const response = await instanceAxios.get(
-          `/carts/user/${this.searchCart}`
+          `/carts/user/${val.value}`
         );
 
         this.searchCart = 0;
         if (response.data.carts.length > 0) {
-          this.handleShowDetailDialog(response.data.carts[0]);
+          this.carts = response.data.carts;
+          // this.handleShowDetailDialog(response.data.carts[0]);
         } else {
           throw new Error(`User does not have any cart `);
         }
@@ -544,6 +509,45 @@ export default {
       });
 
       this.getData();
+    },
+
+    filterFn(val, update) {
+      setTimeout(() => {
+        if (val == "") {
+          update(() => {
+            this.options = [];
+          });
+          return;
+        }
+
+        update(() => {
+          this.options = [];
+          val
+            .trim()
+            .split(/\s+/)
+            .forEach(async (item) => {
+              const dataFilter = await handleAPIGet(
+                `users/search`,
+                {
+                  q: item,
+                },
+                "Cannot find user"
+              );
+              dataFilter.data.users.map((u) => {
+                const optionObject = {
+                  label: u.firstName + " " + u.lastName,
+                  value: u.id,
+                };
+                const isExist =
+                  this.options.filter((item) => item.value == u.id).length > 0;
+                if (!isExist) {
+                  this.options.push(optionObject);
+                }
+              });
+            });
+        });
+
+      }, 700);
     },
   },
 };

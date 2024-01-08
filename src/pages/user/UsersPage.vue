@@ -32,32 +32,7 @@
         <div class="col-7 justify-center">
           <div class="q-pa-md">
             <div class="col-12 row justify-between">
-              <!-- Cart -->
-              <QSelectInput
-                label="Cart filter"
-                :options="options"
-                :model="filterCartUser"
-                @filter="filterFn"
-                @update:model-value="handleShowFilterCart"
-              />
-
-              <!-- To do -->
-              <QSelectInput
-                label="Todo filter"
-                :options="options"
-                :model="filterTodoUser"
-                @filter="filterFn"
-                @update:model-value="handleShowFilterTodo"
-              />
-
-              <!-- Post -->
-              <QSelectInput
-                label="Post filter"
-                :options="options"
-                :model="filterPostUser"
-                @filter="filterFn"
-                @update:model-value="handleShowFilterPost"
-              />
+           <!-- Filter HERE -->
             </div>
           </div>
         </div>
@@ -110,7 +85,28 @@
 
       <template v-slot:body-cell-action="props">
         <q-td>
-          <div class="row justify-center q-gutter-md" style="width: 100px">
+          <div class="row justify-center q-gutter-sm" style="width: 200px">
+            <q-btn
+              flat
+              dense
+              icon="list"
+              color="primary"
+              @click="handleShowFilterTodo(props.row.id)"
+            />
+            <q-btn
+              flat
+              dense
+              icon="shopping_cart"
+              color="primary"
+              @click="handleShowFilterCart(props.row.id)"
+            />
+            <q-btn
+              flat
+              dense
+              icon="library_books"
+              color="primary"
+              @click="handleShowFilterPost(props.row.id)"
+            />
             <q-btn
               flat
               dense
@@ -221,7 +217,6 @@ import TableSkeleton from "src/components/TableSkeleton.vue";
 import ConfirmDialog from "src/components/ConfirmDialog.vue";
 import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 import CartDetailDialog from "../cart/components/CartDetailDialog.vue";
-import QSelectInput from "./components/QSelectInput.vue";
 import TodoDetailDialog from "./components/TodoDetailDialog.vue";
 import PostDetailDialog from "./components/PostDetailDialog.vue";
 
@@ -240,7 +235,6 @@ export default {
     ConfirmDialog,
     UserTemplateDialog,
     CartDetailDialog,
-    QSelectInput,
     TodoDetailDialog,
     PostDetailDialog,
   },
@@ -413,47 +407,10 @@ export default {
       object.lastName = lastName;
     },
 
-    filterFn(val, update) {
-      setTimeout(() => {
-        if (val == "") {
-          update(() => {
-            this.options = [];
-          });
-          return;
-        }
 
-        update(() => {
-          this.options = [];
-          val
-            .trim()
-            .split(/\s+/)
-            .forEach(async (item) => {
-              const dataFilter = await handleAPIGet(
-                `users/search`,
-                {
-                  q: item,
-                },
-                "Cannot find user"
-              );
-              dataFilter.data.users.map((u) => {
-                const optionObject = {
-                  label: u.firstName + " " + u.lastName,
-                  value: u.id,
-                };
-                const isExist =
-                  this.options.filter((item) => item.value == u.id).length > 0;
-                if (!isExist) {
-                  this.options.push(optionObject);
-                }
-              });
-            });
-        });
-      }, 700);
-    },
-
-    async handleShowFilter(type, value, property, message) {
-      if (value != null) {
-        const responseData = await handleAPIGet(`users/${value.value}/${type}`);
+    async handleShowFilter(type, userId, property, message) {
+      if (userId != null) {
+        const responseData = await handleAPIGet(`users/${userId}/${type}`);
         const data = responseData.data[property];
 
         if (data.length > 0) {
@@ -481,19 +438,16 @@ export default {
       }
     },
 
-    async handleShowFilterCart(value) {
-      this.filterCartUser = value;
-      await this.handleShowFilter("carts", value, "carts", "cart");
+    async handleShowFilterCart(userId) {
+      await this.handleShowFilter("carts", userId, "carts", "cart");
     },
 
-    async handleShowFilterPost(value) {
-      this.filterPostUser = value;
-      await this.handleShowFilter("posts", value, "posts", "post");
+    async handleShowFilterPost(userId) {
+      await this.handleShowFilter("posts", userId, "posts", "post");
     },
 
-    async handleShowFilterTodo(value) {
-      this.filterTodoUser = value;
-      await this.handleShowFilter("todos", value, "todos", "todo");
+    async handleShowFilterTodo(userId) {
+      await this.handleShowFilter("todos", userId, "todos", "todo");
     },
   },
 };
