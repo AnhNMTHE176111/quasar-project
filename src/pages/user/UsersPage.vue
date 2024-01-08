@@ -30,33 +30,18 @@
           </q-input>
         </div>
         <div class="col-7 justify-center">
-          <form @submit.prevent="hanldeFilter" class="col-12">
-            <div class="q-pa-md">
-              <div class="col-12 row justify-end">
-                <!-- Cart -->
-                <q-select
-                  filled
-                  dense
-                  v-model="model"
-                  use-input
-                  input-debounce="0"
-                  label="Cart filter"
-                  :options="['abc', 'xyz']"
-                  @filter="filterFn"
-                  style="width: 250px"
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey">
-                        No results
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-
-              </div>
+          <div class="q-pa-md">
+            <div class="col-12 row justify-end">
+              <!-- Cart -->
+              <QSelectInput
+                label="Cart filter"
+                :options="options"
+                :model="filterUser"
+                @filter="filterFn"
+                @update:model-value="handleShowFilterCart"
+              />
             </div>
-          </form>
+          </div>
         </div>
         <div class="col-2 row justify-end">
           <div>
@@ -188,33 +173,51 @@
     @handleSubmit="handleCreateUser"
   />
 
+  <!-- filter cart user -->
+  <CartDetailDialog
+    v-model="showDetailCartDialog"
+    :showPopup="showDetailCartDialog"
+    :currentDetailCart="currentDetailCart"
+    :viewOnly="false"
+  />
+
   <TableSkeleton :loading="loading" />
 </template>
 
 <script>
-import { useQuasar } from "quasar";
+import { Notify, useQuasar } from "quasar";
 import { ref } from "vue";
 import columns from "./columns";
 import TableSkeleton from "src/components/TableSkeleton.vue";
 import ConfirmDialog from "src/components/ConfirmDialog.vue";
+import UserTemplateDialog from "./components/UserTemplateDialog.vue";
+import CartDetailDialog from "../cart/components/CartDetailDialog.vue";
+import QSelectInput from "./components/QSelectInput.vue";
+
 import {
   handleAPIDelete,
   handleAPIGet,
   handleAPIUpdate,
   handleAPICreate,
 } from "src/services/apiHandlers";
-import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 
 export default {
   name: "UserPage",
 
-  components: { TableSkeleton, ConfirmDialog, UserTemplateDialog },
+  components: {
+    TableSkeleton,
+    ConfirmDialog,
+    UserTemplateDialog,
+    CartDetailDialog,
+    QSelectInput,
+  },
 
   setup() {
     const quasarNotify = useQuasar();
     const users = ref([]);
     const currentUser = ref([]);
     const rowsPerPageOptions = ref([5, 10, 15, 20]);
+    const options = ref([]);
 
     // pagination
     const currentPage = ref(1);
@@ -250,10 +253,13 @@ export default {
       rowsPerPageOptions,
       showDetailUserDialog: ref(false),
       showCreateUserDialog: ref(false),
-      filterFn(val, update) {
-        console.log(val);
-        console.log('update', update);
-      }
+      showDetailCartDialog: ref(false),
+      currentDetailCart: ref(null),
+      filterUser: ref({
+        label: "",
+        value: "",
+      }),
+      options,
     };
   },
 
@@ -351,8 +357,6 @@ export default {
       this.getData();
     },
 
-    hanldeFilter() {},
-
     handleChangeRowsPerPage() {
       this.currentPage = 1;
       this.params.limit = this.rowsPerPage;
@@ -373,7 +377,69 @@ export default {
       object.lastName = lastName;
     },
 
+    filterFn(val, update) {
+      setTimeout(() => {
+        if (this.filterUser.label != "") {
+          val = this.filterUser.label;
+        }
 
+        if (val == "") {
+          update(() => {
+            this.options = [];
+          });
+          return;
+        }
+
+        update(() => {
+          this.options = [];
+          val
+            .trim()
+            .split(/\s+/)
+            .forEach(async (item) => {
+              const dataFilter = await handleAPIGet(
+                `users/search`,
+                {
+                  q: item,
+                },
+                "Cannot find user"
+              );
+              dataFilter.data.users.map((u) => {
+                const optionObject = {
+                  label: u.firstName + " " + u.lastName,
+                  value: u.id,
+                };
+                const isExist =
+                  this.options.filter((item) => item.value == u.id).length > 0;
+                if (!isExist) {
+                  this.options.push(optionObject);
+                }
+              });
+            });
+        });
+      }, 700);
+    },
+
+    async handleShowFilterCart(value) {
+      this.filterUser = value;
+      if (this.filterUser != null) {
+        const responseDataCart = await handleAPIGet(
+          `users/${this.filterUser.value}/carts`
+        );
+        if (responseDataCart.data.carts.length > 0) {
+          this.showDetailCartDialog = true;
+          this.currentDetailCart = responseDataCart.data.carts[0];
+        } else {
+          Notify.create({
+            message: "User does not have any cart",
+            position: "top-right",
+            type: "info",
+          });
+        }
+      }
+    },
+
+    async handleShowFilterPost() {},
+    async handleShowFilterTodo() {},
   },
 };
 </script>

@@ -21,6 +21,7 @@
                   :src="product.thumbnail"
                   spinner-color="white"
                   style="height: 140px; max-width: 150px"
+                  alt="Image Product"
                 />
               </q-item-section>
               <q-item-section>
@@ -93,6 +94,7 @@
           <div class="row justify-end q-gutter-sm">
             <q-btn icon="delete" color="dark" v-close-popup>Cancel</q-btn>
             <q-btn
+            v-if="viewOnly"
               icon="edit"
               color="primary"
               @click="$emit('showUpdateDialog')"
@@ -113,6 +115,7 @@ export default {
   emits: ["showUpdateDialog"],
   props: {
     showPopup: Boolean,
+    viewOnly: Boolean,
     currentDetailCart: Object,
   },
   setup() {

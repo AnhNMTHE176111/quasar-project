@@ -248,7 +248,6 @@
     </q-card>
   </q-dialog>
 
-  <CartDetailDialog />
   <AddNewCartDialog
     v-model="showCreateDialog"
     :showPopup="showCreateDialog"
@@ -268,6 +267,7 @@
     :showPopup="showDetailDialog"
     :currentDetailCart="currentDetailCart"
     @showUpdateDialog="handleShowUpdateDialog(currentDetailCart)"
+    :viewOnly="true"
   />
 
 </template>
@@ -286,7 +286,6 @@ export default {
     CartDetailDialog,
     AddNewCartDialog,
     UpdateCartDialog,
-    CartDetailDialog,
   },
   setup() {
     const carts = ref([]);
@@ -374,7 +373,7 @@ export default {
       promptSearchCart: ref(false),
       searchCart: ref(0),
       currentUpdateCart: ref([]),
-      
+
       filter,
       currentDetailCart: ref({}),
     };
@@ -392,7 +391,7 @@ export default {
 
       const params = [];
 
-      Object.keys(this.filter).map((item) => {
+      Object.keys(this.filter).forEach((item) => {
         if (typeof this.filter[item] != "object") {
           params[item] = this.filter[item];
         }
@@ -537,7 +536,7 @@ export default {
     },
 
     hanldeFilter() {
-      Object.keys(this.filter).map((item, index) => {
+      Object.keys(this.filter).forEach((item, index) => {
         if (typeof this.filter[item] == "object") {
           this.filter[`${item}Min`] = this.filter[item].min;
           this.filter[`${item}Max`] = this.filter[item].max;

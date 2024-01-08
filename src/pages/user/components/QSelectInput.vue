@@ -2,12 +2,15 @@
   <q-select
     filled
     dense
-    v-model="$props.model"
     use-input
-    input-debounce="0"
-    label="Cart filter"
-    :options="['abc', 'xyz']"
-    @filter="filterFn"
+    clearable
+    fill-input
+    hide-selected
+    :model-value="model"
+    :label="label"
+    :options="options"
+    :on-filter="$emit('filterFn')"
+    @update:model-value="$emit('handleUpdateValue', value)"
     style="width: 250px"
   >
     <template v-slot:no-option>
@@ -23,14 +26,17 @@ export default {
   name: "QSelectInput",
 
   props: {
-    model: String,
-    options: Array
+    label: String,
+    options: Array,
+    model: Object,
   },
 
-  emits: [],
+  emits: ["handleUpdateValue", "filterFn"],
 
   setup() {
     return {};
   },
+
+  methods: {},
 };
 </script>
