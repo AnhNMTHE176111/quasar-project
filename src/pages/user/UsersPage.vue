@@ -31,14 +31,32 @@
         </div>
         <div class="col-7 justify-center">
           <div class="q-pa-md">
-            <div class="col-12 row justify-end">
+            <div class="col-12 row justify-between">
               <!-- Cart -->
               <QSelectInput
                 label="Cart filter"
                 :options="options"
-                :model="filterUser"
+                :model="filterCartUser"
                 @filter="filterFn"
                 @update:model-value="handleShowFilterCart"
+              />
+
+              <!-- To do -->
+              <QSelectInput
+                label="Todo filter"
+                :options="options"
+                :model="filterTodoUser"
+                @filter="filterFn"
+                @update:model-value="handleShowFilterTodo"
+              />
+
+              <!-- Post -->
+              <QSelectInput
+                label="Post filter"
+                :options="options"
+                :model="filterPostUser"
+                @filter="filterFn"
+                @update:model-value="handleShowFilterPost"
               />
             </div>
           </div>
@@ -181,6 +199,12 @@
     :viewOnly="false"
   />
 
+  <TodoDetailDialog
+    v-model="showDetailTodoDialog"
+    :showPopup="showDetailTodoDialog"
+    :todos="currentDetailTodo"
+  />
+
   <TableSkeleton :loading="loading" />
 </template>
 
@@ -200,6 +224,7 @@ import {
   handleAPIUpdate,
   handleAPICreate,
 } from "src/services/apiHandlers";
+import TodoDetailDialog from "./components/TodoDetailDialog.vue";
 
 export default {
   name: "UserPage",
@@ -210,6 +235,7 @@ export default {
     UserTemplateDialog,
     CartDetailDialog,
     QSelectInput,
+    TodoDetailDialog,
   },
 
   setup() {
@@ -254,11 +280,14 @@ export default {
       showDetailUserDialog: ref(false),
       showCreateUserDialog: ref(false),
       showDetailCartDialog: ref(false),
+      showDetailPostDialog: ref(false),
+      showDetailTodoDialog: ref(false),
       currentDetailCart: ref(null),
-      filterUser: ref({
-        label: "",
-        value: "",
-      }),
+      currentDetailPost: ref(null),
+      currentDetailTodo: ref(null),
+      filterCartUser: ref(null),
+      filterTodoUser: ref(null),
+      filterPostUser: ref(null),
       options,
     };
   },
@@ -379,10 +408,6 @@ export default {
 
     filterFn(val, update) {
       setTimeout(() => {
-        if (this.filterUser.label != "") {
-          val = this.filterUser.label;
-        }
-
         if (val == "") {
           update(() => {
             this.options = [];
@@ -419,18 +444,30 @@ export default {
       }, 700);
     },
 
-    async handleShowFilterCart(value) {
-      this.filterUser = value;
-      if (this.filterUser != null) {
-        const responseDataCart = await handleAPIGet(
-          `users/${this.filterUser.value}/carts`
-        );
-        if (responseDataCart.data.carts.length > 0) {
-          this.showDetailCartDialog = true;
-          this.currentDetailCart = responseDataCart.data.carts[0];
+    async handleShowFilter(type, value, property, message) {
+      if (value != null) {
+        const responseData = await handleAPIGet(`users/${value.value}/${type}`);
+        const data = responseData.data[property];
+
+        if (data.length > 0) {
+          switch (type) {
+            case "carts":
+              this.showDetailCartDialog = true;
+              this.currentDetailCart = data[0];
+              break;
+            case "posts":
+              this.showDetailPostDialog = true;
+              this.currentDetailPost = data[0];
+              break;
+            case "todos":
+              this.showDetailTodoDialog = true;
+              console.log('data', data);
+              this.currentDetailTodo = data;
+              break;
+          }
         } else {
           Notify.create({
-            message: "User does not have any cart",
+            message: `User does not have any ${message}`,
             position: "top-right",
             type: "info",
           });
@@ -438,8 +475,20 @@ export default {
       }
     },
 
-    async handleShowFilterPost() {},
-    async handleShowFilterTodo() {},
+    async handleShowFilterCart(value) {
+      this.filterCartUser = value;
+      await this.handleShowFilter("carts", value, "carts", "cart");
+    },
+
+    async handleShowFilterPost(value) {
+      this.filterPostUser = value;
+      await this.handleShowFilter("posts", value, "posts", "post");
+    },
+
+    async handleShowFilterTodo(value) {
+      this.filterTodoUser = value;
+      await this.handleShowFilter("todos", value, "todos", "todo");
+    },
   },
 };
 </script>
