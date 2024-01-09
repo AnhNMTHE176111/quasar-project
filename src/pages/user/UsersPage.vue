@@ -5,6 +5,7 @@
         <div class="col-2 row justify-start">
           <q-input
             outlined
+            dense
             v-model="searchUser"
             @keypress="
               (event) => {
@@ -33,34 +34,55 @@
         <div class="col-7 row justify-center">
           <div class="row q-gutter-md">
             <!-- Filter HERE -->
+            <q-select
+              class="col-3"
+              dense
+              outlined
+              label="Gender"
+              v-model="params.gender"
+              :options="genderOptions"
+            />
+
+            <q-select
+              class="col-3"
+              dense
+              outlined
+              label="University"
+              v-model="params.university"
+              :options="universityOptions"
+            />
+
             <q-input
               v-model="params.email"
-              outlined=""
+              dense
+              outlined
               type="email"
               label="Email"
             />
             <q-input
               v-model="params.phone"
-              outlined=""
+              dense
+              outlined
               type="phone"
               label="Phone"
             />
             <div class="">
               <q-btn
-                padding="md lg"
+                padding="sm lg"
                 class="q-mr-md"
                 color="primary"
                 label="Filter"
                 @click="handleFilter"
               />
-              <q-btn padding="md lg" label="Clear" @click="handleClearFilter" />
+              <q-btn padding="sm lg" label="Clear" @click="handleClearFilter" />
             </div>
           </div>
         </div>
         <div class="col-2 row justify-end">
-          <div>
+          <div class="row">
             <q-btn
-              class="q-ma-md"
+              padding="sm lg"
+              dense
               icon="add"
               color="blue"
               @click="() => (showCreateUserDialog = true)"
@@ -240,6 +262,7 @@ import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 import CartDetailDialog from "../cart/components/CartDetailDialog.vue";
 import TodoDetailDialog from "./components/TodoDetailDialog.vue";
 import PostDetailDialog from "./components/PostDetailDialog.vue";
+import getUniversitiesData from "./universitiesData";
 
 import {
   handleAPIDelete,
@@ -260,7 +283,7 @@ export default {
     PostDetailDialog,
   },
 
-  setup() {
+  async setup() {
     const quasarNotify = useQuasar();
     const users = ref([]);
     const currentUser = ref([]);
@@ -281,6 +304,9 @@ export default {
       limit: rowsPerPage.value,
       skip: rowsPerPage.value * (currentPage.value - 1),
     });
+
+    const universitiesData = await getUniversitiesData();
+    console.log("this", universitiesData.value);
 
     return {
       loading: ref(true),
@@ -315,6 +341,8 @@ export default {
       emailFilter: ref(""),
       phoneFilter: ref(""),
       addressFilter: ref(""),
+      genderOptions: ref(["male", "female"]),
+      universityOptions: ref(universitiesData),
     };
   },
 

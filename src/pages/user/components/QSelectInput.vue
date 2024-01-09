@@ -1,6 +1,6 @@
 <template>
   <q-select
-    filled
+    outlined
     dense
     use-input
     clearable

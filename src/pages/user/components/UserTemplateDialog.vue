@@ -2,19 +2,33 @@
   <q-dialog v-model="show">
     <q-card style="width: 80vw; max-width: 90vw" class="q-pa-sm">
       <q-card-section>
-        <div class="text-h5">User Detail</div>
+        <div class="text-h5 q-mb-md">User Detail</div>
+        <q-separator />
       </q-card-section>
 
-      <q-separator />
-
-      <q-card-section class="row q-gutter-sm justify-around">
+      <q-card-section
+        class="row q-gutter-sm justify-around scroll"
+        style="max-height: 60vh"
+      >
         <div class="col-4">
-          <q-card-section>
-            <q-img
-              :src="user.image"
-              loading
-              style="height: 100px; max-width: 100px"
-            />
+          <q-card-section class="row q-gutter-sm">
+            <q-img class="col-7" :src="user.image" loading fit />
+            <q-file
+              label="Choose Image"
+              filled
+              dense
+              v-model="file"
+              class="col-3"
+              clearable
+              capture
+              :filter="checkFileType"
+              @rejected="onRejected"
+              @update:model-value="handlePickFile"
+            >
+              <template v-slot:prepend>
+                <q-icon name="cloud_upload" />
+              </template>
+            </q-file>
           </q-card-section>
 
           <q-card-section class="q-gutter-md">
@@ -352,6 +366,7 @@
 <script>
 import { ref } from "vue";
 import createUserStructure from "../userStructure";
+import { Notify } from "quasar";
 
 export default {
   name: "UserTemplateDialog",
@@ -371,7 +386,9 @@ export default {
     return {
       show: ref(true),
       user,
+      file: ref(null),
       genderOptions: ref(["male", "female"]),
+      acceptImage: ref(['image/jpeg', 'image/jpg', 'image/png'])
     };
   },
 
@@ -382,7 +399,27 @@ export default {
 
     handleSubmit(user) {
       this.$emit("handleSubmit", user);
-      this.resetDialog()
+      this.resetDialog();
+    },
+
+    handlePickFile() {
+      const imageLink = URL.createObjectURL(this.file);
+      this.user.image = imageLink;
+    },
+
+    checkFileType(files) {
+      return files.filter((file) => {
+        console.log(file);
+        return this.acceptImage.filter(item => item == file.type).length > 0 ;
+      });
+    },
+
+    onRejected(rejectedEntries) {
+      Notify.create({
+        type: "negative",
+        message: `Only Accept .png, .jpg File`,
+        position: "top-right",
+      });
     },
   },
 
