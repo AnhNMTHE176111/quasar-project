@@ -48,6 +48,7 @@ async function handleAPIGet(endpoint, params, failMsg) {
     const response = await instanceAxios.request({
       url: endpoint,
       params: { ...params },
+      
     });
     return response;
   } catch (error) {

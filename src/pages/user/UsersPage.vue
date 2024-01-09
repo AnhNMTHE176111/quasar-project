@@ -16,7 +16,7 @@
             <template v-slot:append>
               <q-icon
                 name="close"
-                @click="() => (searchUser = '')"
+                @click="() => (searchUser = null)"
                 v-if="searchUser.length > 0"
                 color="blue"
                 style="cursor: pointer"
@@ -500,7 +500,7 @@ export default {
 
     resetParam() {
       for (const key in this.params) {
-        this.params[key] = "";
+        this.params[key] = null;
       }
       this.currentPage = 1;
       this.params.limit = this.rowsPerPage;
