@@ -16,7 +16,7 @@ Phần user:
 chuyển hết filter user (hiện tại) => action của mỗi user
 làm tiếp phần filter
 
-Phần cart: làm lại ô search, gõ tên, select tên => cart detail của user ở dưới
+Phần cart: làm lại ô search, gõ tên, select tên => cart detail của user ở dưới <ok></ok>
 
 
 review1:

@@ -11,7 +11,7 @@
                 if (event.key == 'Enter') handleSearchUser();
               }
             "
-            label="Search"
+            label="Search Name"
           >
             <template v-slot:append>
               <q-icon
@@ -24,15 +24,36 @@
               <q-icon
                 name="search"
                 @click="handleSearchUser"
+                :color="searchUser.length > 0 ? 'blue' : ''"
                 style="cursor: pointer"
               />
             </template>
           </q-input>
         </div>
-        <div class="col-7 justify-center">
-          <div class="q-pa-md">
-            <div class="col-12 row justify-between">
-           <!-- Filter HERE -->
+        <div class="col-7 row justify-center">
+          <div class="row q-gutter-md">
+            <!-- Filter HERE -->
+            <q-input
+              v-model="params.email"
+              outlined=""
+              type="email"
+              label="Email"
+            />
+            <q-input
+              v-model="params.phone"
+              outlined=""
+              type="phone"
+              label="Phone"
+            />
+            <div class="">
+              <q-btn
+                padding="md lg"
+                class="q-mr-md"
+                color="primary"
+                label="Filter"
+                @click="handleFilter"
+              />
+              <q-btn padding="md lg" label="Clear" @click="handleClearFilter" />
             </div>
           </div>
         </div>
@@ -290,6 +311,10 @@ export default {
       filterTodoUser: ref(null),
       filterPostUser: ref(null),
       options,
+      filter: ref({}),
+      emailFilter: ref(""),
+      phoneFilter: ref(""),
+      addressFilter: ref(""),
     };
   },
 
@@ -307,9 +332,22 @@ export default {
       const response = await handleAPIGet(endpoint, this.params, failMsg);
       this.loading = false;
 
+      // handle params do not have value
+      const copyParams = {};
+      for (const key in this.params) {
+        if (
+          this.params[key] !== "" &&
+          this.params[key] !== undefined &&
+          this.params[key] !== null
+        ) {
+          copyParams[key] = this.params[key];
+        }
+      }
+
       this.$router.push({
-        query: { ...this.params },
+        query: { ...copyParams },
       });
+
       this.users = response.data.users || response.data;
       if (response.data.total) {
         this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
@@ -383,6 +421,7 @@ export default {
     },
 
     async handleSearchUser() {
+      this.resetParam();
       this.params.q = this.searchUser.trim();
       this.getData();
     },
@@ -406,7 +445,6 @@ export default {
       object.firstName = firstName;
       object.lastName = lastName;
     },
-
 
     async handleShowFilter(type, userId, property, message) {
       if (userId != null) {
@@ -448,6 +486,25 @@ export default {
 
     async handleShowFilterTodo(userId) {
       await this.handleShowFilter("todos", userId, "todos", "todo");
+    },
+
+    handleFilter() {
+      this.currentPage = 1;
+      this.getData();
+    },
+
+    handleClearFilter() {
+      this.resetParam();
+      this.getData();
+    },
+
+    resetParam() {
+      for (const key in this.params) {
+        this.params[key] = "";
+      }
+      this.currentPage = 1;
+      this.params.limit = this.rowsPerPage;
+      this.params.skip = this.rowsPerPage * (this.currentPage - 1);
     },
   },
 };
