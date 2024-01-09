@@ -3,13 +3,7 @@
     <div class="q-pa-md shadow-3 q-mb-md">
       <div class="row justify-between">
         <div class="col-1 row justify-start">
-          <div>
-            <q-btn
-              class="q-ma-md"
-              icon="search"
-              color="blue"
-              @click="promptSearchCart = true"
-            />
+          <div >
             <!-- Search HERE -->
             <QSelectInput
               label="Cart of User"
@@ -80,53 +74,7 @@
       </div>
     </div>
 
-    <q-markup-table v-if="loading">
-      <thead>
-        <tr>
-          <th class="text-left" style="width: 150px">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr v-for="n in 14" :key="n">
-          <td class="text-left">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="50px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="35px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="65px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="25px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-        </tr>
-      </tbody>
-    </q-markup-table>
+    <TableSkeleton :loading="loading" />
 
     <q-table
       title="Cart"
@@ -136,7 +84,7 @@
       :rows="carts"
       :pagination="pagination"
       :loading="loading"
-      v-else
+      v-if="!loading"
     >
       <template v-slot:body-cell-action="props">
         <q-td>
@@ -353,7 +301,7 @@ export default {
     async getData() {
       this.loading = true;
 
-      const params = [];
+      const params = {};
 
       Object.keys(this.filter).forEach((item) => {
         if (typeof this.filter[item] != "object") {
@@ -378,7 +326,7 @@ export default {
         }
       } catch (error) {
         this.quasarNotify.notify({
-          message: `${"Server Failed" || error.message}`,
+          message: `${error.message || "Server Failed"}`,
           position: "top-right",
           type: "negative",
         });
@@ -428,7 +376,7 @@ export default {
         this.showUpdateDialog = false;
         const updateCart = this.carts.filter((c) => c.id == id)[0];
         Object.assign(updateCart, response.data);
-        cart = [];
+
         this.quasarNotify.notify({
           message: "Update cart successfully",
           position: "top-right",
@@ -453,7 +401,7 @@ export default {
 
         this.showCreateDialog = false;
         this.carts.unshift(response.data);
-        cart = [];
+
         this.quasarNotify.notify({
           message: "Create new cart successfully",
           position: "top-right",
@@ -469,23 +417,26 @@ export default {
     },
 
     async handleSearchCart(val) {
-      try {
-        const response = await instanceAxios.get(
-          `/carts/user/${val.value}`
-        );
+      this.searchCart = val;
+      if(!val) {
+        this.getData();
+        return
+      }
 
-        this.searchCart = 0;
-        if (response.data.carts.length > 0) {
-          this.carts = response.data.carts;
-          // this.handleShowDetailDialog(response.data.carts[0]);
-        } else {
+      try {
+        const response = await instanceAxios.get(`/carts/user/${val.value}`);
+
+        this.carts = response.data.carts;
+        this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
+        if (response.data.carts.length <= 0) {
           throw new Error(`User does not have any cart `);
         }
+
       } catch (error) {
         this.quasarNotify.notify({
           message: `${error.response?.data.message || error.message}`,
           position: "top-right",
-          type: "negative",
+          type: "info",
         });
       }
     },
@@ -546,7 +497,6 @@ export default {
               });
             });
         });
-
       }, 700);
     },
   },

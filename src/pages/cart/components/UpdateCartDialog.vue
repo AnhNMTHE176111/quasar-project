@@ -138,7 +138,7 @@
                 </q-item-section>
                 <q-item-section avatar side>
                   <q-btn dense @click="removeSelectedProduct(product)">
-                    <q-icon name="deconste" color="red" />
+                    <q-icon name="delete" color="red" />
                   </q-btn>
                 </q-item-section>
               </q-item>

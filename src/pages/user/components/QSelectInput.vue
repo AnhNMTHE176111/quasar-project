@@ -11,7 +11,6 @@
     :options="options"
     :on-filter="$emit('filterFn')"
     @update:model-value="$emit('handleUpdateValue', value)"
-    style="width: 250px"
   >
     <template v-slot:no-option>
       <q-item>
