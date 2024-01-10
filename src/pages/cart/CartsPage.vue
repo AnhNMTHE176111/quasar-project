@@ -154,55 +154,13 @@
     </q-table>
   </div>
 
-  <q-dialog v-model="confirmDelete" persistent>
-    <q-card>
-      <q-card-section class="row items-center">
-        <span class="q-ml-sm"
-          >Do you want to delete cart with ID: {{ currentCartId }}?
-        </span>
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="primary" v-close-popup />
-        <q-btn
-          flat
-          label="Delete"
-          color="danger"
-          @click="handleDeleteCart()"
-          v-close-popup
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-
-  <q-dialog v-model="promptSearchCart" persistent>
-    <q-card style="min-width: 350px">
-      <form action="" @submit.prevent="handleSearchCart">
-        <q-card-section>
-          <div class="text-h6">Get carts of a user:</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-input
-            dense
-            v-model.number="searchCart"
-            autofocus
-            type="number"
-            @keyup.enter="promptSearchCart = false"
-            :rules="[
-              (val) => (val >= 1 && val <= 100) || 'ID: 1-100',
-              (val) => parseInt(val) == val || 'Integer number',
-            ]"
-          />
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" @click="searchCart = 0" v-close-popup />
-          <q-btn flat label="Search" type="submit" v-close-popup />
-        </q-card-actions>
-      </form>
-    </q-card>
-  </q-dialog>
+  <ConfirmDialog
+    v-model="confirmDelete"
+    :confirm="confirmDelete"
+    :title="`Do you want to delete cart with ID: ${currentCartId}?`"
+    btnTitle="Delete"
+    @handleConfirm="handleDeleteCart()"
+  />
 
   <AddNewCartDialog
     v-model="showCreateDialog"
@@ -236,8 +194,15 @@ import CartDetailDialog from "./components/CartDetailDialog.vue";
 import instanceAxios from "src/axios-instance";
 import QSelectInput from "../user/components/QSelectInput.vue";
 import columns from "./columns";
-import { handleAPIGet } from "src/services/apiHandlers";
+import {
+  handleAPICreate,
+  handleAPIDelete,
+  handleAPIGet,
+  handleAPIUpdate,
+} from "src/services/apiHandlers";
 import TableSkeleton from "src/components/TableSkeleton.vue";
+import ConfirmDialog from "src/components/ConfirmDialog.vue";
+import cleanParams from "src/services/paramsHandlers";
 
 export default {
   name: "CartsPage",
@@ -248,6 +213,7 @@ export default {
     UpdateCartDialog,
     QSelectInput,
     TableSkeleton,
+    ConfirmDialog,
   },
 
   setup() {
@@ -306,34 +272,22 @@ export default {
       this.loading = true;
 
       const params = {};
-
       Object.keys(this.filter).forEach((item) => {
         if (typeof this.filter[item] != "object") {
           params[item] = this.filter[item];
         }
       });
+      const response = await handleAPIGet("cart", params);
 
-      try {
-        const response = await instanceAxios.request({
-          url: "cart",
-          params: { ...params },
-        });
+      // handle params do not have value
+      const copyParams = cleanParams(this.params);
+      this.$router.push({
+        query: { ...copyParams },
+      });
 
-        this.$router.push({
-          query: { ...params },
-        });
-
-        this.carts = response.data.carts || response.data;
-
-        if (response.data.total) {
-          this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
-        }
-      } catch (error) {
-        this.quasarNotify.notify({
-          message: `${error.message || "Server Failed"}`,
-          position: "top-right",
-          type: "negative",
-        });
+      this.carts = response.data.carts || response.data;
+      if (response.data.total) {
+        this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
       }
 
       this.loading = false;
@@ -345,54 +299,31 @@ export default {
     },
 
     async handleDeleteCart() {
-      try {
-        const response = await instanceAxios.delete(
-          `/carts/${this.currentCartId}`
-        );
+      const response = await handleAPIDelete(
+        `/carts/${this.currentCartId}`,
+        "Delete Successfully",
+        "Delete Fail"
+      );
 
-        const deletedCart = await response.data;
-        const index = this.carts.findIndex((cart) => cart.id == deletedCart.id);
-        this.carts.splice(index, 1);
-        this.confirmDelete = false;
-        this.currentCartId = -1;
-
-        this.quasarNotify.notify({
-          message: "Delete Successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } catch (error) {
-        console.log(error);
-        this.quasarNotify.notify({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const deletedCart = await response.data;
+      const index = this.carts.findIndex((cart) => cart.id == deletedCart.id);
+      this.carts.splice(index, 1);
+      this.confirmDelete = false;
+      this.currentCartId = -1;
     },
 
     async handleUpdateCart(cart) {
       const id = this.currentUpdateCart.id;
 
-      try {
-        const response = await instanceAxios.put(`carts/${id}`, { ...cart });
-
-        this.showUpdateDialog = false;
-        const updateCart = this.carts.filter((c) => c.id == id)[0];
-        Object.assign(updateCart, response.data);
-
-        this.quasarNotify.notify({
-          message: "Update cart successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } catch (error) {
-        this.quasarNotify.notify({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const response = await handleAPIUpdate(
+        `carts/${id}`,
+        cart,
+        "Update cart successfully",
+        `Update Fail`
+      );
+      this.showUpdateDialog = false;
+      const updateCart = this.carts.filter((c) => c.id == id)[0];
+      Object.assign(updateCart, response.data);
     },
 
     handleResetUpdateCartDialog() {
@@ -400,24 +331,14 @@ export default {
     },
 
     async handleCreateCart(cart) {
-      try {
-        const response = await instanceAxios.post(`/carts/add`, { ...cart });
-
-        this.showCreateDialog = false;
-        this.carts.unshift(response.data);
-
-        this.quasarNotify.notify({
-          message: "Create new cart successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } catch (error) {
-        this.quasarNotify.notify({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const response = await handleAPICreate(
+        `/carts/add`,
+        cart,
+        "Create new cart successfully",
+        "Create Fail"
+      );
+      this.showCreateDialog = false;
+      this.carts.unshift(response.data);
     },
 
     async handleSearchCart(val) {
