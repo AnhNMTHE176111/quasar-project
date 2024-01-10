@@ -1,10 +1,11 @@
 <template>
   <div class="q-pa-md">
-    <div class="q-pa-md shadow-3 q-mb-md">
+    <div class="q-pa-md shadow-3 q-my-md">
       <div class="row justify-between">
-        <div class="col-2 row justify-start">
+        <div class="col-10 row justify-start q-gutter-sm">
           <q-input
             outlined
+            class="col-2"
             dense
             v-model="searchUser"
             @keypress="
@@ -30,12 +31,10 @@
               />
             </template>
           </q-input>
-        </div>
-        <div class="col-7 row justify-center">
-          <div class="row q-gutter-md">
-            <!-- Filter HERE -->
-            <q-select
-              class="col-3"
+
+           <!-- Filter HERE -->
+           <q-select
+              class="col-2"
               dense
               outlined
               label="Gender"
@@ -49,24 +48,18 @@
               outlined
               label="University"
               v-model="params.university"
-              :options="universityOptions"
+              :options="uniOption"
+            />
+            <q-select
+              class="col-1"
+              dense
+              outlined
+              label="Blood Group"
+              v-model="params.bloodGroup"
+              :options="bloodGroupOption"
             />
 
-            <q-input
-              v-model="params.email"
-              dense
-              outlined
-              type="email"
-              label="Email"
-            />
-            <q-input
-              v-model="params.phone"
-              dense
-              outlined
-              type="phone"
-              label="Phone"
-            />
-            <div class="">
+            <div class="col-3">
               <q-btn
                 padding="sm lg"
                 class="q-mr-md"
@@ -76,7 +69,7 @@
               />
               <q-btn padding="sm lg" label="Clear" @click="handleClearFilter" />
             </div>
-          </div>
+
         </div>
         <div class="col-2 row justify-end">
           <div class="row">
@@ -255,14 +248,15 @@
 <script>
 import { Notify, useQuasar } from "quasar";
 import { ref } from "vue";
-import columns from "./columns";
 import TableSkeleton from "src/components/TableSkeleton.vue";
 import ConfirmDialog from "src/components/ConfirmDialog.vue";
 import UserTemplateDialog from "./components/UserTemplateDialog.vue";
 import CartDetailDialog from "../cart/components/CartDetailDialog.vue";
 import TodoDetailDialog from "./components/TodoDetailDialog.vue";
 import PostDetailDialog from "./components/PostDetailDialog.vue";
-import getUniversitiesData from "./universitiesData";
+import columns from "./base-data/columns";
+import getUniversitiesData from "./base-data/universitiesData";
+import getBloodGroupData from "./base-data/bloodGroupData";
 
 import {
   handleAPIDelete,
@@ -283,7 +277,7 @@ export default {
     PostDetailDialog,
   },
 
-  async setup() {
+  setup() {
     const quasarNotify = useQuasar();
     const users = ref([]);
     const currentUser = ref([]);
@@ -293,7 +287,7 @@ export default {
     // pagination
     const currentPage = ref(1);
     const rowsNumber = ref(0);
-    const rowsPerPage = ref(10);
+    const rowsPerPage = ref(15);
     const pagination = ref({
       page: currentPage.value,
       rowsPerPage: rowsPerPage.value,
@@ -304,9 +298,6 @@ export default {
       limit: rowsPerPage.value,
       skip: rowsPerPage.value * (currentPage.value - 1),
     });
-
-    const universitiesData = await getUniversitiesData();
-    console.log("this", universitiesData.value);
 
     return {
       loading: ref(true),
@@ -342,12 +333,19 @@ export default {
       phoneFilter: ref(""),
       addressFilter: ref(""),
       genderOptions: ref(["male", "female"]),
-      universityOptions: ref(universitiesData),
+      uniOption: ref([]),
+      bloodGroupOption: ref([]),
     };
   },
 
-  mounted() {
+  async mounted() {
     this.getData();
+
+    const universitiesData = await getUniversitiesData();
+    this.uniOption = universitiesData;
+
+    const bloodGroupData = await getBloodGroupData();
+    this.bloodGroupOption = bloodGroupData;
   },
 
   methods: {
@@ -541,3 +539,4 @@ export default {
 <style>
 @import "style.sass";
 </style>
+./base-data/columns./base-data/universitiesData

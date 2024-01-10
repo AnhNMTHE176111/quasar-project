@@ -365,7 +365,7 @@
 
 <script>
 import { ref } from "vue";
-import createUserStructure from "../userStructure";
+import createUserStructure from "../base-data/userStructure";
 import { Notify } from "quasar";
 
 export default {
@@ -388,7 +388,7 @@ export default {
       user,
       file: ref(null),
       genderOptions: ref(["male", "female"]),
-      acceptImage: ref(['image/jpeg', 'image/jpg', 'image/png'])
+      acceptImage: ref(["image/jpeg", "image/jpg", "image/png"]),
     };
   },
 
@@ -410,7 +410,7 @@ export default {
     checkFileType(files) {
       return files.filter((file) => {
         console.log(file);
-        return this.acceptImage.filter(item => item == file.type).length > 0 ;
+        return this.acceptImage.filter((item) => item == file.type).length > 0;
       });
     },
 
@@ -433,3 +433,4 @@ export default {
   },
 };
 </script>
+../base-data/userStructure
