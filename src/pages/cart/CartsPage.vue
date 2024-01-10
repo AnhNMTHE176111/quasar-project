@@ -3,7 +3,7 @@
     <div class="q-pa-md shadow-3 q-mb-md">
       <div class="row justify-between">
         <div class="col-1 row justify-start">
-          <div >
+          <div>
             <!-- Search HERE -->
             <QSelectInput
               label="Cart of User"
@@ -14,10 +14,10 @@
             />
           </div>
         </div>
-        <div class="col-7 justify-center">
+        <div class="col-6 justify-center">
           <form @submit.prevent="hanldeFilter" class="col-12">
-            <div class="q-pa-md">
-              <q-list dense>
+            <div class="q-pa-md row">
+              <q-list class="col-10" dense>
                 <q-item>
                   <q-item-section class="col-2">Total:</q-item-section>
                   <q-item-section>
@@ -55,7 +55,7 @@
                   </q-item-section>
                 </q-item>
               </q-list>
-              <div class="col-12 row justify-end">
+              <div class="col-2">
                 <q-btn type="submit"> Submit </q-btn>
               </div>
             </div>
@@ -237,15 +237,19 @@ import instanceAxios from "src/axios-instance";
 import QSelectInput from "../user/components/QSelectInput.vue";
 import columns from "./columns";
 import { handleAPIGet } from "src/services/apiHandlers";
+import TableSkeleton from "src/components/TableSkeleton.vue";
 
 export default {
   name: "CartsPage",
+
   components: {
     CartDetailDialog,
     AddNewCartDialog,
     UpdateCartDialog,
     QSelectInput,
+    TableSkeleton,
   },
+
   setup() {
     const carts = ref([]);
     const quasarNotify = useQuasar();
@@ -418,9 +422,9 @@ export default {
 
     async handleSearchCart(val) {
       this.searchCart = val;
-      if(!val) {
+      if (!val) {
         this.getData();
-        return
+        return;
       }
 
       try {
@@ -431,7 +435,6 @@ export default {
         if (response.data.carts.length <= 0) {
           throw new Error(`User does not have any cart `);
         }
-
       } catch (error) {
         this.quasarNotify.notify({
           message: `${error.response?.data.message || error.message}`,

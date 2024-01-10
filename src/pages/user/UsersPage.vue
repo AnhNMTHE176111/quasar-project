@@ -32,44 +32,43 @@
             </template>
           </q-input>
 
-           <!-- Filter HERE -->
-           <q-select
-              class="col-2"
-              dense
-              outlined
-              label="Gender"
-              v-model="params.gender"
-              :options="genderOptions"
-            />
+          <!-- Filter HERE -->
+          <q-select
+            class="col-2"
+            dense
+            outlined
+            label="Gender"
+            v-model="params.gender"
+            :options="genderOptions"
+          />
 
-            <q-select
-              class="col-3"
-              dense
-              outlined
-              label="University"
-              v-model="params.university"
-              :options="uniOption"
-            />
-            <q-select
-              class="col-1"
-              dense
-              outlined
-              label="Blood Group"
-              v-model="params.bloodGroup"
-              :options="bloodGroupOption"
-            />
+          <q-select
+            class="col-3"
+            dense
+            outlined
+            label="University"
+            v-model="params.university"
+            :options="uniOption"
+          />
+          <q-select
+            class="col-1"
+            dense
+            outlined
+            label="Blood Group"
+            v-model="params.bloodGroup"
+            :options="bloodGroupOption"
+          />
 
-            <div class="col-3">
-              <q-btn
-                padding="sm lg"
-                class="q-mr-md"
-                color="primary"
-                label="Filter"
-                @click="handleFilter"
-              />
-              <q-btn padding="sm lg" label="Clear" @click="handleClearFilter" />
-            </div>
-
+          <div class="col-3">
+            <q-btn
+              padding="sm lg"
+              class="q-mr-md"
+              color="primary"
+              label="Filter"
+              @click="handleFilter"
+            />
+            <q-btn padding="sm lg" label="Clear" @click="handleClearFilter" />
+          </div>
         </div>
         <div class="col-2 row justify-end">
           <div class="row">
@@ -264,6 +263,7 @@ import {
   handleAPIUpdate,
   handleAPICreate,
 } from "src/services/apiHandlers";
+import cleanParams from "src/services/paramsHandlers";
 
 export default {
   name: "UserPage",
@@ -359,16 +359,7 @@ export default {
       this.loading = false;
 
       // handle params do not have value
-      const copyParams = {};
-      for (const key in this.params) {
-        if (
-          this.params[key] !== "" &&
-          this.params[key] !== undefined &&
-          this.params[key] !== null
-        ) {
-          copyParams[key] = this.params[key];
-        }
-      }
+      const copyParams = cleanParams(this.params);
 
       this.$router.push({
         query: { ...copyParams },

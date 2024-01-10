@@ -8,6 +8,10 @@ UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
 ================ TASK CMS USER =========================
+Dashboard: thống kê, sản phẩm bán chạy
+
+
+================ TASK CMS USER =========================
 review2:
 ** option ở trên bảng table => chỉ phục vụ filter bảng xuất hiện ở dưới
 ** mỗi row sẽ có action cho từng row
