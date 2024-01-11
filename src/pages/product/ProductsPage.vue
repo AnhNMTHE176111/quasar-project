@@ -1,9 +1,16 @@
 <template>
   <div class="q-pa-md">
-    <div class="q-pa-md shadow-3 q-mb-md">
-      <div class="row justify-between">
-        <div class="col-2 row justify-start">
+    <div class="shadow-3 q-mb-md">
+      <div class="row q-px-md justify-between">
+        <form
+          class="col-9 row justify-start q-gutter-sm q-mt-md"
+          @reset.prevent="handleClearFilter"
+          @submit.prevent="handleFilter"
+        >
           <q-input
+            outlined=""
+            dense
+            class="col-2"
             v-model="searchValue"
             @keypress="
               (event) => {
@@ -12,11 +19,10 @@
             "
             label="Search"
           >
-            <!-- @keyup="handleSearchProduct" -->
             <template v-slot:append>
               <q-icon
                 name="close"
-                @click="() => (searchValue = '')"
+                @click="handleClearSearch"
                 v-if="searchValue.length > 0"
                 color="blue"
                 style="cursor: pointer"
@@ -28,137 +34,86 @@
               />
             </template>
           </q-input>
-        </div>
-        <div class="col-7 row justify-center q-gutter-sm">
-          <div class="row">
-            <q-select
-              class="btn"
-              label="Category"
-              v-model="chooseCategory"
-              :options="categories"
-            >
-              <template v-slot:prepend>
-                <q-icon name="category" />
-              </template>
-            </q-select>
-            <!-- <q-btn
-              class="q-ma-md"
-              icon="restart_alt"
-              @click="resetCategory"
-              v-if="chooseCategory"
-            /> -->
-          </div>
-          <div>
-            <form
-              action=""
-              class="row q-gutter-sm"
-              @reset.prevent="filterFormReset"
-              @submit.prevent="filterFormSubmit"
-            >
-              <q-input
-                v-model="priceFrom"
-                type="number"
-                class="col-2"
-                label="Price From"
-                error-message="Please type correct number"
-                :error="!validFilterPrice"
-              />
-              <q-input
-                v-model="priceTo"
-                type="number"
-                class="col-2"
-                label="Price To "
-                error-message="Please type correct number"
-                :error="!validFilterPrice"
-              />
-              <q-select v-model="selectedRating" :options="rating">
-                <template v-slot:prepend>
-                  <q-icon name="star" />
-                </template>
-              </q-select>
-              <div class="row">
-                <q-btn
-                  icon="tune"
-                  class="q-ma-md"
-                  color="primary"
-                  type="submit"
-                />
-                <q-btn
-                  icon="filter_list_off"
-                  class="q-ma-md"
-                  color="negative"
-                  type="reset"
-                  v-show="
-                    (priceFrom && priceFrom <= priceTo) ||
-                    selectedRating ||
-                    chooseCategory
-                  "
-                />
-              </div>
-            </form>
-          </div>
-        </div>
-        <div class="col-3 row justify-end">
-          <q-btn
-            v-show="selectedProduct.length > 0"
-            color="primary"
-            icon="payment"
-            label="Bulk Pricing"
-            class="q-ma-md"
-            @click="ShowSth"
+
+          <q-select
+            class="col-2"
+            dense
+            outlined=""
+            label="Category"
+            v-model="params.category"
+            :options="categories"
           />
-          <q-btn class="q-ma-md" icon="add" @click="showCreateDialog" />
+
+          <q-input
+            outlined=""
+            dense
+            v-model="params.priceFrom"
+            type="number"
+            class="col-2"
+            label="Price From"
+            error-message="Please type correct number"
+            :error="!validFilterPrice"
+          />
+
+          <q-input
+            outlined=""
+            dense
+            v-model="params.priceTo"
+            type="number"
+            class="col-2"
+            label="Price To "
+            error-message="Please type correct number"
+            :error="!validFilterPrice"
+          />
+
+          <q-select
+            class="col-1"
+            v-model="params.rating"
+            :options="rating"
+            outlined=""
+            dense
+            label="Star"
+          />
+
+          <div>
+            <q-btn
+              padding="sm lg"
+              class="q-mr-sm"
+              dense
+              icon="tune"
+              color="primary"
+              type="submit"
+            />
+
+            <q-btn
+              padding="sm lg"
+              dense
+              icon="filter_list_off"
+              color="negative"
+              type="reset"
+            />
+          </div>
+        </form>
+
+        <div class="col-3 row justify-end">
+          <div class="q-pt-lg q-gutter-sm">
+            <q-btn
+              v-show="selectedProduct.length > 0"
+              color="primary"
+              icon="payment"
+              label="Bulk Pricing"
+              dense
+              @click="ShowSth"
+              padding="sm md"
+            />
+
+            <q-btn dense padding="sm md" icon="add" @click="showCreateDialog" />
+          </div>
         </div>
       </div>
     </div>
 
-    <q-markup-table v-if="loading">
-      <thead>
-        <tr>
-          <th class="text-left" style="width: 150px">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr v-for="n in 14" :key="n">
-          <td class="text-left">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="50px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="35px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="65px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="25px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-        </tr>
-      </tbody>
-    </q-markup-table>
+    <TableSkeleton :loading="loading" />
 
     <q-table
       title="Products"
@@ -168,7 +123,7 @@
       :columns="columns"
       :rows="products"
       :pagination="pagination"
-      v-else
+      v-if="!loading"
     >
       <template v-slot:body-cell-action="props">
         <q-td>
@@ -209,12 +164,7 @@
               flat
               color="grey"
               active-color="primary"
-              @update:model-value="
-                () => {
-                  // selectedAll = false;
-                  hanldeChangeData(convertToAPI());
-                }
-              "
+              @update:model-value="handleChangePage"
             />
           </div>
           <div class="col-2 row justify-end">
@@ -225,12 +175,7 @@
               outlined
               options-dense
               class="row"
-              @update:model-value="
-                () => {
-                  this.currentPage = 1;
-                  hanldeChangeData(convertToAPI());
-                }
-              "
+              @update:model-value="handleChangeRowsPerPage"
             >
               <template v-slot:before>
                 <div class="text-subtitle2 text-weight-bold">
@@ -244,26 +189,13 @@
     </q-table>
   </div>
 
-  <q-dialog v-model="confirmDelete" persistent>
-    <q-card>
-      <q-card-section class="row items-center">
-        <span class="q-ml-sm"
-          >Do you want to delete product with ID: {{ currentProductId }}?
-        </span>
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="primary" v-close-popup />
-        <q-btn
-          flat
-          label="Delete"
-          color="danger"
-          @click="handleDeleteProduct()"
-          v-close-popup
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+  <ConfirmDialog
+    v-model="confirmDelete"
+    :confirm="confirmDelete"
+    :title="`Do you want to delete product with ID: ${currentProductId}?`"
+    btnTitle="Delete"
+    @handleConfirm="handleDeleteProduct()"
+  />
 
   <ProductDialog
     v-model="createProductDialog"
@@ -273,12 +205,14 @@
     @createProduct="hanldeCreateProduct"
     @updateProduct="hanldeUpdateProduct"
   />
+
   <ProductViewCard
     v-model="showViewProduct"
     :showViewProduct="showViewProduct"
     :product="productViewing"
     @openProductUpdateDialog="openProductUpdateDialog"
   />
+
   <BulkPricingDialog
     v-model="showPricingDialog"
     :showPricingDialog="showPricingDialog"
@@ -293,6 +227,16 @@ import ProductViewCard from "./components/ProductViewCard.vue";
 import ProductDialog from "./components/ProductDialog.vue";
 import BulkPricingDialog from "./components/BulkPricingDialog.vue";
 import instanceAxios from "src/axios-instance";
+import columns from "./base-data/columns";
+import TableSkeleton from "src/components/TableSkeleton.vue";
+import {
+  handleAPICreate,
+  handleAPIDelete,
+  handleAPIGet,
+  handleAPIUpdate,
+} from "src/services/apiHandlers";
+import ConfirmDialog from "src/components/ConfirmDialog.vue";
+import cleanParams from "src/services/paramsHandlers";
 
 const PRODUCT_CATEGORIES_API = import.meta.env.VITE_PRODUCT_CATEGORIES_API;
 
@@ -301,19 +245,17 @@ export default {
     ProductDialog,
     ProductViewCard,
     BulkPricingDialog,
-    BulkPricingDialog,
-    BulkPricingDialog,
-    ProductViewCard,
-    ProductDialog,
+    TableSkeleton,
+    ConfirmDialog,
   },
 
   mounted() {
     this.getData();
+    this.getAllCategories();
   },
 
   setup() {
     const selectedProduct = ref([]);
-    const productsDataRaw = ref([]);
     const products = ref([]);
     const confirmDelete = ref(false);
     const createProductDialog = ref(false);
@@ -326,13 +268,7 @@ export default {
     const showPricingDialog = ref(false);
     const currentUpdateProduct = ref([]);
     const categories = ref([]);
-    const chooseCategory = ref(null);
     const loading = ref(true);
-
-    //filter option
-    const priceFrom = ref(null);
-    const priceTo = ref(null);
-    const selectedRating = ref(null);
 
     // pagination
     const currentPage = ref(1);
@@ -343,75 +279,15 @@ export default {
       rowsPerPage: rowsPerPage.value,
       rowsNumber: rowsNumber.value,
     });
-    const columns = [
-      {
-        name: "title",
-        label: "Title",
-        field: "title",
-        required: true,
-        align: "left",
-        style: "min-width: 300px",
-      },
-      {
-        name: "brand",
-        label: "Brand",
-        field: "brand",
-        required: true,
-        align: "left",
-        style: "min-width: 200px",
-      },
-      {
-        name: "category",
-        label: "Category",
-        field: "category",
-        required: true,
-        align: "left",
-        style: "min-width: 120px",
-      },
-      {
-        name: "price",
-        label: "Price",
-        field: "price",
-        required: true,
-        align: "center",
-        format: (val, row) => val.toLocaleString("en-US"),
-      },
-      {
-        name: "discountPercentage",
-        label: "Discount",
-        field: "discountPercentage",
-        required: true,
-        align: "center",
-        format: (val, row) => {
-          if (val) {
-            return val.toFixed(1);
-          }
-        },
-      },
-      {
-        name: "rating",
-        label: "Rating",
-        field: "rating",
-        required: true,
-        align: "center",
-      },
-      {
-        name: "stock",
-        label: "Stock",
-        field: "stock",
-        required: true,
-        align: "center",
-      },
-      {
-        name: "action",
-        label: "Action",
-        align: "center",
-      },
-    ];
+
+    // father of params
+    const params = ref({
+      limit: rowsPerPage.value,
+      skip: rowsPerPage.value * (currentPage.value - 1),
+    });
 
     return {
       products,
-      productsDataRaw,
       columns,
       quasarNotify,
       selectedProduct,
@@ -424,366 +300,195 @@ export default {
       productViewing,
       showViewProduct,
       showPricingDialog,
-      chooseCategory,
       categories,
-      selectedRating,
-      priceFrom,
-      priceTo,
       rating: [1, 2, 3, 4, 5],
       validFilterPrice: ref(true),
-      timeout: ref(null),
-      oldSearchvalue: ref(""),
       loading,
       currentPage,
       rowsPerPage,
       rowsNumber,
       pagination,
-      selectedAll: ref(false),
       rowsPerPageOptions: ref([5, 10, 15, 20]),
-      data: ref([]),
-      filterOptions: ref({
-        search: searchValue,
-        category: chooseCategory,
-        priceFrom: priceFrom,
-        priceTo: priceTo,
-        rating: selectedRating,
-      }),
+      params,
     };
   },
 
   methods: {
     async getData() {
-      this.hanldeChangeData(this.convertToAPI());
-      this.getAllCategories();
+      // get api
+      this.loading = true;
+      const response = await handleAPIGet(
+        `products`,
+        this.params,
+        "Get Products Fail"
+      );
+
+      // handle params do not have value
+      const copyParams = cleanParams(this.params);
+
+      this.$router.push({
+        query: { ...copyParams },
+      });
+
+      // update data
+      this.products = response.data.products;
+      this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
+      this.loading = false;
     },
+
     async getAllCategories() {
       const responseCategories = await instanceAxios.get(
         PRODUCT_CATEGORIES_API
       );
       this.categories = await responseCategories.data;
     },
-    getValueCell(field, row) {
-      if (field == "isDeleted") {
-        if (row[field] === true) {
-          return "Deleted";
-        } else {
-          return "Not deleted";
-        }
-      }
-      return row[field];
-    },
+
     openConfirmDeleteDialog(id) {
       this.confirmDelete = true;
       this.currentProductId = id;
     },
+
     async handleDeleteProduct() {
-      let response;
+      await handleAPIDelete(
+        `/products/${this.currentProductId}`,
+        "Delete successfully",
+        "Delete Server fail"
+      );
 
-      try {
-        response = await instanceAxios.delete(
-          `/products/${this.currentProductId}`
-        );
-      } catch (error) {
-        console.log(error);
-        this.quasarNotify.notify({
-          message: "Delete Server fail",
-          position: "top-right",
-          type: "negative",
-        });
-      }
-
-      if (response.status === 200) {
-        const deletedProduct = await response.data;
-        const index = this.products.findIndex(
-          (product) => product.id == deletedProduct.id
-        );
-        this.products.splice(index, 1);
-        this.confirmDelete = false;
-        this.currentProductId = -1;
-
-        this.quasarNotify.notify({
-          message: "Delete successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } else {
-        this.quasarNotify.notify({
-          message: "Delete fail",
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const index = this.products.findIndex(
+        (product) => product.id == this.currentProductId
+      );
+      this.products.splice(index, 1);
+      this.confirmDelete = false;
+      this.currentProductId = -1;
     },
+
     async hanldeCreateProduct(product) {
-      let response;
-      try {
-        response = await instanceAxios.post("/products/add", {
-          ...product,
-        });
-      } catch (error) {
-        console.log(error);
-        this.quasarNotify.notify({
-          message: `Server failed`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const response = await handleAPICreate(
+        "/products/add",
+        product,
+        "Create new product successfully",
+        `Create failed `
+      );
 
-      if (response.status === 200) {
-        this.products.unshift(response.data);
-        product = [];
-        this.createProductDialog = false;
-        this.quasarNotify.notify({
-          message: "Create new product successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } else {
-        this.quasarNotify.notify({
-          message: `Create failed `,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      this.products.unshift(response.data);
+      this.createProductDialog = false;
     },
+
     async hanldeUpdateProduct(product) {
       const { id, ...updateObject } = product;
       updateObject.rating = parseFloat(updateObject.rating);
 
-      let response;
-      try {
-        response = await instanceAxios.put(`/products/${id}`, {
-          ...updateObject,
-        });
-      } catch (error) {
-        console.log(error);
-        this.quasarNotify.notify({
-          message: `Update Server failed`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
-      if (response.status === 200) {
-        const updateProduct = this.products.filter((p) => p.id == id)[0];
-        Object.assign(updateProduct, updateObject);
-        product = [];
-        this.createProductDialog = false;
-        this.quasarNotify.notify({
-          message: "Update successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } else {
-        this.quasarNotify.notify({
-          message: `Update failed `,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      await handleAPIUpdate(
+        `/products/${id}`,
+        updateObject,
+        "Update successfully",
+        `Update failed `
+      );
+
+      const updateProduct = this.products.filter((p) => p.id == id)[0];
+      Object.assign(updateProduct, updateObject);
+      this.createProductDialog = false;
     },
+
     async hanldeBulkPricing(updatePrice, updateDiscount) {
-      console.log("updatePrice", updatePrice);
-      console.log("updateDiscount", updateDiscount);
-      let result = [];
-      await Promise.all(
-        this.selectedProduct.map(async (product) => {
-          const id = product.id;
-          const response = await instanceAxios.put(`/products/${id}`, {
+      this.selectedProduct.forEach(async (product) => {
+        const response = await handleAPIUpdate(
+          `/products/${product.id}`,
+          {
             price: parseInt(updatePrice),
             discountPercentage: parseInt(updateDiscount),
-          });
-          let currentResult = {
-            id: id,
-            success: false,
-          };
+          },
+          "",
+          `Fail update product ${product.title}`
+        );
 
-          if (response.status == 200) {
-            const updateProduct = this.products.filter((p) => p.id == id)[0];
-            currentResult.success = true;
-            product.price = parseInt(updatePrice);
-            product.discountPercentage = parseInt(updateDiscount);
-            Object.assign(updateProduct, product);
-          }
-          result.push(currentResult);
-        })
-      );
+        const updatedProduct = response.data;
+        const currentProduct = this.products.filter((p) => p.id == product.id)[0];
+        Object.assign(currentProduct, updatedProduct);
+      });
       this.showPricingDialog = false;
-
-      const failItems = result.filter((item) => item.success == false);
-      if (failItems.length == 0) {
-        this.quasarNotify.notify({
-          message: `Update successfully `,
-          position: "top-right",
-          type: "positive",
-        });
-      } else {
-        const isFailItems = result.filter((item) => !item.success);
-        this.quasarNotify.notify({
-          message:
-            "Update failed item id: " + isFailItems.map((item) => item.id),
-          position: "top-right",
-          type: "negative",
-        });
-      }
     },
+
     showCreateDialog() {
       this.typeOfDialog = "create";
       this.createProductDialog = true;
       this.currentUpdateProduct = [];
     },
+
     showUpdateDialog(proID) {
       const product = this.products.filter((p) => p.id == proID)[0];
       this.typeOfDialog = "update";
       this.currentUpdateProduct = { ...product };
       this.createProductDialog = true;
     },
+
     showViewingProductDialog(proID) {
       const product = this.products.filter((p) => p.id == proID)[0];
       this.productViewing = { ...product };
       this.showViewProduct = true;
     },
+
     openProductUpdateDialog(id) {
       this.showUpdateDialog(id);
     },
+
     ShowSth() {
       this.showPricingDialog = true;
     },
-    resetCategory() {
-      this.chooseCategory = "";
-      this.products = this.productsDataRaw.products;
+
+    handleSearchProduct() {
+      if (this.searchValue) {
+        this.searchValue = this.searchValue.trim().split(/\s+/g).join(" ");
+        this.params.search = this.searchValue;
+      }
+      this.getData();
     },
-    filterFormReset() {
-      this.priceFrom = "";
-      this.priceTo = "";
-      this.selectedRating = null;
-      this.resetCategory();
-      this.hanldeChangeData(this.convertToAPI());
+
+    handleClearSearch() {
+      this.searchValue = "";
+      this.params.search = null;
     },
-    filterFormSubmit() {
+
+    handleChangePage() {
+      this.params.skip = this.rowsPerPage * (this.currentPage - 1);
+      this.getData();
+    },
+
+    handleChangeRowsPerPage() {
+      this.currentPage = 1;
+      this.params.limit = this.rowsPerPage;
+      this.getData();
+    },
+
+    handleFilter() {
       if (
-        parseInt(this.priceTo) <= parseInt(this.priceFrom) &&
-        !isNaN(parseInt(this.priceFrom)) &&
-        !isNaN(parseInt(this.priceTo))
+        parseInt(this.params.priceTo) <= parseInt(this.params.priceFrom) &&
+        !isNaN(parseInt(this.params.priceFrom)) &&
+        !isNaN(parseInt(this.params.priceTo))
       ) {
         this.validFilterPrice = false;
-      }
-      let filterPrice = false;
-
-      if (
-        parseInt(this.priceTo) >= parseInt(this.priceFrom) &&
-        !isNaN(parseInt(this.priceFrom)) &&
-        !isNaN(parseInt(this.priceTo))
-      ) {
-        this.validFilterPrice = true;
-        filterPrice = true;
+        return;
       }
 
-      if (filterPrice || this.chooseCategory) {
-        this.hanldeChangeData(this.convertToAPI());
-      }
+      this.validFilterPrice = true;
+      this.currentPage = 1;
+      this.getData();
     },
-    handleSearchProduct() {
-      this.searchValue = this.searchValue.trim().split(/\s+/g).join(" ");
-      this.hanldeChangeData(this.convertToAPI());
-    },
-    async handleFilterByCategory() {
-      this.hanldeChangeData(this.convertToAPI());
-    },
-    selectedAllProducts() {
-      if (this.selectedAll) {
-        this.products.map((item) => this.selectedProduct.push(item.id));
-        // this.selectedProduct = this.products;
-      } else {
-        this.selectedProduct = [];
-      }
-    },
-    async hanldeChangePage(api) {
-      this.loading = true;
 
-      // case dont use api
-      let start = (this.currentPage - 1) * this.rowsPerPage;
-      let end = start + this.rowsPerPage;
-      console.log(start, end);
-      let checkdata = [];
-      for (let index = start; index < end; index++) {
-        const element = this.data.find((item) => item.id == index + 1);
-        if (element) {
-          checkdata.push(element);
-        }
-      }
-      console.log("checkdata", checkdata);
-      if (checkdata.length == this.rowsPerPage) {
-        this.products = checkdata;
-      } else {
-        // case use api
-        let responseProducts = await instanceAxios.get(api);
-        responseProducts.data.products.map((product) => {
-          let foundProduct = this.data.find((item) => item.id == product.id);
-          if (!foundProduct) {
-            this.data.push(product);
-          }
-        });
-        this.data.sort((a, b) => a.id - b.id);
-        console.log("data", this.data);
-        this.productsDataRaw = responseProducts.data;
-        this.products = responseProducts.data.products;
-        this.rowsNumber = Math.ceil(
-          responseProducts.data.total / this.rowsPerPage
-        );
-      }
-
-      this.loading = false;
+    handleClearFilter() {
+      this.resetParam();
+      this.validFilterPrice = true;
+      this.getData();
     },
-    async hanldeChangeData(api) {
-      this.loading = true;
-      let responseProducts = await instanceAxios.get(api);
-      this.$router.push(api);
 
-      responseProducts.data.products.map((product) => {
-        let foundProduct = this.data.find((item) => item.id == product.id);
-        if (!foundProduct) {
-          this.data.push(product);
-        }
-      });
-      this.data.sort((a, b) => a.id - b.id);
-      this.productsDataRaw.total = responseProducts.data.total;
-      this.productsDataRaw.products = this.data;
-
-      this.products = responseProducts.data.products;
-      this.rowsNumber = Math.ceil(
-        responseProducts.data.total / this.rowsPerPage
-      );
-      this.loading = false;
-    },
-    show(a) {
-      console.log("a", a);
-    },
-    convertToAPI() {
-      let searchText = "";
-      let categoryText = "";
-      let priceText = "";
-      let ratingtext = "";
-      let apiTextObjects = [];
-      if (this.filterOptions.search) {
-        searchText = `search=${this.filterOptions.search}`;
-        apiTextObjects.push(searchText);
+    resetParam() {
+      for (const key in this.params) {
+        this.params[key] = null;
       }
-      if (this.filterOptions.category) {
-        categoryText = `cid=${this.filterOptions.category}`;
-        apiTextObjects.push(categoryText);
-      }
-      if (this.filterOptions.priceFrom || this.filterOptions.priceTo) {
-        priceText = `priceF=${this.priceFrom}&priceT=${this.priceTo}`;
-        apiTextObjects.push(priceText);
-      }
-      if (this.filterOptions.rating) {
-        ratingtext = `rating=${this.selectedRating}`;
-        apiTextObjects.push(ratingtext);
-      }
-      let apiText = `/products?${apiTextObjects.join("&")}&limit=${
-        this.rowsPerPage
-      }&skip=${this.rowsPerPage * (this.currentPage - 1)}`;
-      return apiText;
+      this.currentPage = 1;
+      this.params.limit = this.rowsPerPage;
+      this.params.skip = this.rowsPerPage * (this.currentPage - 1);
     },
   },
 };

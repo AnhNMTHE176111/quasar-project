@@ -7,9 +7,40 @@ api: https://dummyjson.com/products
 UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
+================ TASK CMS USER =========================
+Dashboard: thống kê, sản phẩm bán chạy
+
+
+================ TASK CMS USER =========================
+review2:
+** option ở trên bảng table => chỉ phục vụ filter bảng xuất hiện ở dưới
+** mỗi row sẽ có action cho từng row
+
+Phần user:
+chuyển hết filter user (hiện tại) => action của mỗi user
+làm tiếp phần filter
+
+Phần cart: làm lại ô search, gõ tên, select tên => cart detail của user ở dưới <ok></ok>
+
+
+review1:
+first + last => fullname (sticky when scroll horizontal) <ok></ok>
+table just scrol vertical, not all page <ok></ok>
+Email => left <ok></ok>
+visible column => select column to show <ok></ok>
+detail person => show all information <ok></ok>
+
+view => div
+      click edit => input
+filter => create select box (can typing...) then show fullname below
+          like dropbox (q-select), choose a person and show detail
+
+
+
+
 ================ TASK CMS CART =========================
 review1:
--> chia folder <ok></ok>  
+-> chia folder <ok></ok>
 function nen ngắn, ko nên có else <ok></ok>
 const, let chia rõ ràng hơn <ok></ok>
 edit = view + edit <ok></ok>

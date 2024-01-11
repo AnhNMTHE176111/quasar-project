@@ -4,18 +4,20 @@
       <div class="row justify-between">
         <div class="col-1 row justify-start">
           <div>
-            <q-btn
-              class="q-ma-md"
-              icon="search"
-              color="blue"
-              @click="promptSearchCart = true"
+            <!-- Search HERE -->
+            <QSelectInput
+              label="Cart of User"
+              :options="options"
+              :model="searchCart"
+              @filter="filterFn"
+              @update:model-value="handleSearchCart"
             />
           </div>
         </div>
-        <div class="col-7 justify-center">
+        <div class="col-6 justify-center">
           <form @submit.prevent="hanldeFilter" class="col-12">
-            <div class="q-pa-md">
-              <q-list dense>
+            <div class="q-pa-md row">
+              <q-list class="col-10" dense>
                 <q-item>
                   <q-item-section class="col-2">Total:</q-item-section>
                   <q-item-section>
@@ -53,7 +55,7 @@
                   </q-item-section>
                 </q-item>
               </q-list>
-              <div class="col-12 row justify-end">
+              <div class="col-2">
                 <q-btn type="submit"> Submit </q-btn>
               </div>
             </div>
@@ -72,53 +74,7 @@
       </div>
     </div>
 
-    <q-markup-table v-if="loading">
-      <thead>
-        <tr>
-          <th class="text-left" style="width: 150px">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-          <th class="text-right">
-            <q-skeleton animation="blink" type="text" />
-          </th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <tr v-for="n in 14" :key="n">
-          <td class="text-left">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="50px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="35px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="65px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="25px" />
-          </td>
-          <td class="text-right">
-            <q-skeleton animation="blink" type="text" width="85px" />
-          </td>
-        </tr>
-      </tbody>
-    </q-markup-table>
+    <TableSkeleton :loading="loading" />
 
     <q-table
       title="Cart"
@@ -128,7 +84,7 @@
       :rows="carts"
       :pagination="pagination"
       :loading="loading"
-      v-else
+      v-if="!loading"
     >
       <template v-slot:body-cell-action="props">
         <q-td>
@@ -164,6 +120,7 @@
               active-color="primary"
               @update:model-value="
                 () => {
+                  filter.skip = rowsPerPage * (currentPage - 1);
                   getData();
                 }
               "
@@ -180,6 +137,7 @@
               @update:model-value="
                 () => {
                   currentPage = 1;
+                  filter.limit = rowsPerPage;
                   getData();
                 }
               "
@@ -196,57 +154,14 @@
     </q-table>
   </div>
 
-  <q-dialog v-model="confirmDelete" persistent>
-    <q-card>
-      <q-card-section class="row items-center">
-        <span class="q-ml-sm"
-          >Do you want to delete cart with ID: {{ currentCartId }}?
-        </span>
-      </q-card-section>
+  <ConfirmDialog
+    v-model="confirmDelete"
+    :confirm="confirmDelete"
+    :title="`Do you want to delete cart with ID: ${currentCartId}?`"
+    btnTitle="Delete"
+    @handleConfirm="handleDeleteCart()"
+  />
 
-      <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="primary" v-close-popup />
-        <q-btn
-          flat
-          label="Delete"
-          color="danger"
-          @click="handleDeleteCart()"
-          v-close-popup
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-
-  <q-dialog v-model="promptSearchCart" persistent>
-    <q-card style="min-width: 350px">
-      <form action="" @submit.prevent="handleSearchCart">
-        <q-card-section>
-          <div class="text-h6">Get carts of a user:</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-input
-            dense
-            v-model.number="searchCart"
-            autofocus
-            type="number"
-            @keyup.enter="promptSearchCart = false"
-            :rules="[
-              (val) => (val >= 1 && val <= 100) || 'ID: 1-100',
-              (val) => parseInt(val) == val || 'Integer number',
-            ]"
-          />
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancel" @click="searchCart = 0" v-close-popup />
-          <q-btn flat label="Search" type="submit" v-close-popup />
-        </q-card-actions>
-      </form>
-    </q-card>
-  </q-dialog>
-
-  <CartDetailDialog />
   <AddNewCartDialog
     v-model="showCreateDialog"
     :showPopup="showCreateDialog"
@@ -266,6 +181,7 @@
     :showPopup="showDetailDialog"
     :currentDetailCart="currentDetailCart"
     @showUpdateDialog="handleShowUpdateDialog(currentDetailCart)"
+    :viewOnly="true"
   />
 </template>
 
@@ -276,45 +192,39 @@ import AddNewCartDialog from "./components/AddNewCartDialog.vue";
 import UpdateCartDialog from "./components/UpdateCartDialog.vue";
 import CartDetailDialog from "./components/CartDetailDialog.vue";
 import instanceAxios from "src/axios-instance";
-
-const urlSearchParams = new URLSearchParams();
+import QSelectInput from "../user/components/QSelectInput.vue";
+import columns from "./columns";
+import {
+  handleAPICreate,
+  handleAPIDelete,
+  handleAPIGet,
+  handleAPIUpdate,
+} from "src/services/apiHandlers";
+import TableSkeleton from "src/components/TableSkeleton.vue";
+import ConfirmDialog from "src/components/ConfirmDialog.vue";
+import cleanParams from "src/services/paramsHandlers";
 
 export default {
   name: "CartsPage",
+
   components: {
     CartDetailDialog,
     AddNewCartDialog,
     UpdateCartDialog,
-    CartDetailDialog,
+    QSelectInput,
+    TableSkeleton,
+    ConfirmDialog,
   },
+
   setup() {
     const carts = ref([]);
     const quasarNotify = useQuasar();
     const confirmDelete = ref(false);
-    const filter = {};
+    const filter = ref([]);
 
     // table
     const loading = ref(true);
     const rowsPerPageOptions = ref([5, 10, 15, 20]);
-
-    // filter
-    const totalFilter = ref({
-      min: 0,
-      max: 5000,
-    });
-    const rangeTotal = totalFilter.value.max - totalFilter.value.min;
-    const discountedTotalFilter = ref({
-      min: 0,
-      max: 5000,
-    });
-    const rangeDiscountedTotalFilter =
-      discountedTotalFilter.value.max - discountedTotalFilter.value.min;
-    const totalQuantityFilter = ref({
-      min: 0,
-      max: 100,
-    });
-    const rangeTotalQuantityFilter =
-      totalQuantityFilter.value.max - totalQuantityFilter.value.min;
 
     // pagination
     const currentPage = ref(1);
@@ -325,56 +235,6 @@ export default {
       rowsPerPage: rowsPerPage.value,
       rowsNumber: rowsNumber.value,
     });
-
-    const columns = [
-      {
-        name: "cartID",
-        label: "Cart ID",
-        field: "id",
-        align: "center",
-      },
-      {
-        name: "userId",
-        label: "User ID",
-        field: "userId",
-        align: "center",
-      },
-      {
-        name: "totalProducts",
-        label: "Total Products",
-        field: "totalProducts",
-        align: "center",
-      },
-      {
-        name: "totalQuantity",
-        label: "Total Quantity",
-        field: "totalQuantity",
-        align: "center",
-      },
-      {
-        name: "total",
-        label: "Total",
-        field: "total",
-        align: "center",
-        format: (val, row) => val.toLocaleString("en-US"),
-      },
-      {
-        name: "discountedTotal",
-        label: "Discounted Total",
-        field: "discountedTotal",
-        align: "center",
-        format: (val, row) => val.toLocaleString("en-US"),
-      },
-
-      {
-        name: "action",
-        label: "Action",
-        align: "center",
-      },
-    ];
-
-    urlSearchParams.set("limit", rowsPerPage.value);
-    urlSearchParams.set("skip", rowsPerPage.value * (currentPage.value - 1));
 
     return {
       carts,
@@ -393,49 +253,41 @@ export default {
       showUpdateDialog: ref(false),
       showDetailDialog: ref(false),
       promptSearchCart: ref(false),
-      searchCart: ref(0),
+      searchCart: ref(null),
       currentUpdateCart: ref([]),
-      totalFilter,
-      discountedTotalFilter,
-      totalQuantityFilter,
-      rangeDiscountedTotalFilter,
-      rangeTotal,
-      rangeTotalQuantityFilter,
       filter,
-      currentDetailCart: ref([]),
+      currentDetailCart: ref({}),
+      options: ref([]),
     };
   },
+
   mounted() {
     this.filter.limit = this.rowsPerPage;
     this.filter.skip = this.rowsPerPage * (this.currentPage - 1);
     this.getData();
   },
+
   methods: {
     async getData() {
       this.loading = true;
-      // this.$router.push(api);
-      console.log("response", urlSearchParams({ ...this.filter }));
 
-      try {
-        const response = await instanceAxios.request({
-          url: "cart",
-          params: { ...this.filter },
-        });
+      const params = {};
+      Object.keys(this.filter).forEach((item) => {
+        if (typeof this.filter[item] != "object") {
+          params[item] = this.filter[item];
+        }
+      });
+      const response = await handleAPIGet("cart", params);
 
-        if (response.data.carts) {
-          this.carts = response.data.carts;
-        } else {
-          this.carts = response.data;
-        }
-        if (response.data.total) {
-          this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
-        }
-      } catch (error) {
-        this.quasarNotify.notify({
-          message: `${"Server Failed" || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
+      // handle params do not have value
+      const copyParams = cleanParams(this.params);
+      this.$router.push({
+        query: { ...copyParams },
+      });
+
+      this.carts = response.data.carts || response.data;
+      if (response.data.total) {
+        this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
       }
 
       this.loading = false;
@@ -447,54 +299,31 @@ export default {
     },
 
     async handleDeleteCart() {
-      try {
-        const response = await instanceAxios.delete(
-          `/carts/${this.currentCartId}`
-        );
+      const response = await handleAPIDelete(
+        `/carts/${this.currentCartId}`,
+        "Delete Successfully",
+        "Delete Fail"
+      );
 
-        const deletedCart = await response.data;
-        const index = this.carts.findIndex((cart) => cart.id == deletedCart.id);
-        this.carts.splice(index, 1);
-        this.confirmDelete = false;
-        this.currentCartId = -1;
-
-        this.quasarNotify.notify({
-          message: "Delete Successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } catch (error) {
-        console.log(error);
-        this.quasarNotify.notify({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const deletedCart = await response.data;
+      const index = this.carts.findIndex((cart) => cart.id == deletedCart.id);
+      this.carts.splice(index, 1);
+      this.confirmDelete = false;
+      this.currentCartId = -1;
     },
 
     async handleUpdateCart(cart) {
       const id = this.currentUpdateCart.id;
 
-      try {
-        const response = await instanceAxios.put(`carts/${id}`, { ...cart });
-
-        this.showUpdateDialog = false;
-        const updateCart = this.carts.filter((c) => c.id == id)[0];
-        Object.assign(updateCart, response.data);
-        cart = [];
-        this.quasarNotify.notify({
-          message: "Update cart successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } catch (error) {
-        this.quasarNotify.notify({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const response = await handleAPIUpdate(
+        `carts/${id}`,
+        cart,
+        "Update cart successfully",
+        `Update Fail`
+      );
+      this.showUpdateDialog = false;
+      const updateCart = this.carts.filter((c) => c.id == id)[0];
+      Object.assign(updateCart, response.data);
     },
 
     handleResetUpdateCartDialog() {
@@ -502,43 +331,36 @@ export default {
     },
 
     async handleCreateCart(cart) {
-      try {
-        const response = await instanceAxios.post(`/carts/add`, { ...cart });
-
-        this.showCreateDialog = false;
-        this.carts.unshift(response.data);
-        cart = [];
-        this.quasarNotify.notify({
-          message: "Create new cart successfully",
-          position: "top-right",
-          type: "positive",
-        });
-      } catch (error) {
-        this.quasarNotify.notify({
-          message: `${error.response?.data.message || error.message}`,
-          position: "top-right",
-          type: "negative",
-        });
-      }
+      const response = await handleAPICreate(
+        `/carts/add`,
+        cart,
+        "Create new cart successfully",
+        "Create Fail"
+      );
+      this.showCreateDialog = false;
+      this.carts.unshift(response.data);
     },
 
-    async handleSearchCart() {
-      try {
-        const response = await instanceAxios.get(
-          `/carts/user/${this.searchCart}`
-        );
+    async handleSearchCart(val) {
+      this.searchCart = val;
+      if (!val) {
+        this.getData();
+        return;
+      }
 
-        this.searchCart = 0;
-        if (response.data.carts.length > 0) {
-          this.handleShowDetailDialog(response.data.carts[0]);
-        } else {
+      try {
+        const response = await instanceAxios.get(`/carts/user/${val.value}`);
+
+        this.carts = response.data.carts;
+        this.rowsNumber = Math.ceil(response.data.total / this.rowsPerPage);
+        if (response.data.carts.length <= 0) {
           throw new Error(`User does not have any cart `);
         }
       } catch (error) {
         this.quasarNotify.notify({
           message: `${error.response?.data.message || error.message}`,
           position: "top-right",
-          type: "negative",
+          type: "info",
         });
       }
     },
@@ -554,7 +376,52 @@ export default {
     },
 
     hanldeFilter() {
+      Object.keys(this.filter).forEach((item, index) => {
+        if (typeof this.filter[item] == "object") {
+          this.filter[`${item}Min`] = this.filter[item].min;
+          this.filter[`${item}Max`] = this.filter[item].max;
+        }
+      });
+
       this.getData();
+    },
+
+    filterFn(val, update) {
+      setTimeout(() => {
+        if (val == "") {
+          update(() => {
+            this.options = [];
+          });
+          return;
+        }
+
+        update(() => {
+          this.options = [];
+          val
+            .trim()
+            .split(/\s+/)
+            .forEach(async (item) => {
+              const dataFilter = await handleAPIGet(
+                `users/search`,
+                {
+                  q: item,
+                },
+                "Cannot find user"
+              );
+              dataFilter.data.users.map((u) => {
+                const optionObject = {
+                  label: u.firstName + " " + u.lastName,
+                  value: u.id,
+                };
+                const isExist =
+                  this.options.filter((item) => item.value == u.id).length > 0;
+                if (!isExist) {
+                  this.options.push(optionObject);
+                }
+              });
+            });
+        });
+      }, 700);
     },
   },
 };
