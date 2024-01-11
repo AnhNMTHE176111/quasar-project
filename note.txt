@@ -7,30 +7,34 @@ api: https://dummyjson.com/products
 UI framework: quasar
 table: https://quasar.dev/vue-components/table#qtable-api
 
-================ TASK =========================
-sidebar = user + category
-sort price by current page
-update hay add xong cho nhảy lên đầu, hoặc có cái gì để biết mới update
+================ TASK CMS CART =========================
+review1:
+-> chia folder <ok></ok>  
+function nen ngắn, ko nên có else <ok></ok>
+const, let chia rõ ràng hơn <ok></ok>
+edit = view + edit <ok></ok>
 
-table lẹch <ok>
-pagination real <ok>
-có phần chọn rowsperpage (5, 10, 15,...) <ok>
-category => api <ok>
-addeventlistener => watch <ok>
-search => api <ok>
-axios => fetch <ok>
-filter -> khoảng giá, khoảng stock, rating select (1-5), brand <ok>
-search (ok)
-filter category (or sth based on api) <ok>
-khi đang view, có nutus edit ở dưới, click vào nút đấy thì từ dialog view mở rộng ra DIALOG EDIT <ok>
-thay đổi giá sản phẩm theo % hoặc giá tiền <ok>
-view => chuyển thành card <OK>
-action => 3 item: view <eye>, edit, delete (cả 3 đều popup) <ok>
-đẩy sp căng full màn hình <ok>
-input search sang trái<ok>
-button icon <ok>
-search by name <ok>
-thêm check box <ok>
+
+table
+show dialog detail cart
+-> left: scroll list product
+-> right: total information
+
+"id": 39,
+      "title": "Women Sweaters Wool",
+      "price": 600,
+      "quantity": 2,
+      "total": 1200,             // price * quantity
+      "discountPercentage": 17.2,
+      "discountedPrice": 994,    // total * (100 - discountPercentage)%
+      "thumbnail": "https://i.dummyjson.com/data/products/39/thumbnail.jpg"
+  }
+],
+"total": 2328,           // #total
+"discountedTotal": 1941, // #discountedPrice
+"userId": 97,
+"totalProducts": 5, //
+"totalQuantity": 10 //
 
 ==================================================================
 :abc -> v-bind:abc
@@ -50,3 +54,34 @@ defineProps({
 
 popup1 => update product + create product
 popup2 => view product (card)
+
+
+================ TASK CMS PRODUCT (DONE) =========================
+3. API => đưa ra cả 2 phía (server và url) <ok>
+4. try catch => làm bé hơn, chỉ catch những service hay bên thứ 3 </ok>
+sort price by current page <ok>
+update hay add xong cho nhảy lên đầu, hoặc có cái gì để biết mới update </ok>
+đưa các đường dẫn, hay api cố định làm constant <ok/>
+Phía table: nếu cột dài ngắn kahsc nhau => đưa sang trái <ok>
+            nếu cột cố định hay chỉ vài chữ => center       <ok>
+sidebar = user + category <ok>
+thêm skeleton <ok>
+table lẹch <ok></ok>
+pagination real <ok>
+có phần chọn rowsperpage (5, 10, 15,...) <ok>
+category => api <ok>
+addeventlistener => watch <ok>
+search => api <ok>
+axios => fetch <ok>
+filter -> khoảng giá, khoảng stock, rating select (1-5), brand <ok>
+search (ok)
+filter category (or sth based on api) <ok>
+khi đang view, có nutus edit ở dưới, click vào nút đấy thì từ dialog view mở rộng ra DIALOG EDIT <ok>
+thay đổi giá sản phẩm theo % hoặc giá tiền <ok>
+view => chuyển thành card <OK>
+action => 3 item: view <eye>, edit, delete (cả 3 đều popup) <ok>
+đẩy sp căng full màn hình <ok>
+input search sang trái<ok>
+button icon <ok>
+search by name <ok>
+thêm check box <ok>

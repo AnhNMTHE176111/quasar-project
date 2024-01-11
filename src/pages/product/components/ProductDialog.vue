@@ -1,12 +1,12 @@
 <template>
   <q-dialog :show="showPopup">
     <q-card style="width: 700px; max-width: 80vw" class="q-pa-sm">
-      <q-card-senction>
+      <q-card-section>
         <div class="text-h6" v-if="typeOfDialog == 'update'">
           Update Product {{ currentUpdateProduct.id }}
         </div>
         <div class="text-h6" v-else>Create Product</div>
-      </q-card-senction>
+      </q-card-section>
 
       <q-card-section class="q-pt-none">
         <q-form
@@ -52,7 +52,7 @@
                 (val) =>
                   (val !== null && val !== '') || 'Please type something',
                 (val) =>
-                  (val > 0 && val < 100) || 'Please type a correct price',
+                  (val > 0 && val < 100) || 'Please type a correct discount',
               ]"
             />
           </div>
@@ -64,7 +64,7 @@
                 (val) =>
                   (val !== null && val !== '') || 'Please type something',
                 (val) =>
-                  (val > 0 && val < 100) || 'Please type a correct price',
+                  (val > 0 && val < 6) || 'Rating must be a number from 1 to 5',
               ]"
             />
             <q-input
@@ -127,7 +127,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 
 export default {
   props: {
